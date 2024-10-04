@@ -15,6 +15,13 @@ if [[ $(id -u) -ne 0 ]]; then
   exit 1
 fi
 
+install_rhel_packages() {
+  echo "Update the package database and install packages: "
+  sudo dnf update -y
+  dnf install -y git awscli
+  dnf install -y python3-boto3 python3-pymongo python3-ldap3 python3-dotenv
+}
+
 # Function to install Docker
 install_docker() {
 
@@ -23,24 +30,21 @@ install_docker() {
     return 1
   fi
 
-  echo "Step 1: Update the package database"
-  sudo dnf update -y
-
-  echo "Step 2: Add Docker repository"
+  echo "Step 1: Add Docker repository"
   if [[ ! -f ${REPO_FILE} ]]; then
     sudo curl -fsSL ${DOCKER_REPO_URL} -o ${REPO_FILE}
   else
     echo "Docker repository already exists."
   fi
 
-  echo "Step 3: Install Docker packages"
+  echo "Step 2: Install Docker packages"
   sudo dnf install -y ${DOCKER_PACKAGE}
 
-  echo "Step 4: Start and enable Docker service"
+  echo "Step 3: Start and enable Docker service"
   sudo systemctl start docker
   sudo systemctl enable docker
 
-  echo "Step 5: Verify Docker installation"
+  echo "Step 4: Verify Docker installation"
   sudo docker --version
 }
 
@@ -69,6 +73,7 @@ create_or_modify_user() {
 
 # Main function to execute all steps
 function main {
+  install_rhel_packages
   install_docker
   create_or_modify_user
 }
