@@ -10,7 +10,7 @@ Get a RHEL virtual server with at least 8GB RAM and 50GB free disk space of whic
 
 ## Longer term vision 
 
-In the fuuture 
+In the future. 
 
 ![our-chat-dark](https://github.com/dirkpetersen/our-chat/assets/1427719/6fbbc55d-8bf3-4c7f-8d09-990c3ee3c2e6)
 

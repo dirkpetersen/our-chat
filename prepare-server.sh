@@ -7,6 +7,7 @@ DOCKER_REPO_URL="https://download.docker.com/linux/rhel/docker-ce.repo"
 DOCKER_PACKAGE="docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin"
 REPO_FILE="/etc/yum.repos.d/docker-ce.repo"
 NEWUSER="ochat"
+SHELL_BIN="/bin/bash"
 
 # Ensure the script is run as root
 if [[ $(id -u) -ne 0 ]]; then
@@ -14,13 +15,14 @@ if [[ $(id -u) -ne 0 ]]; then
   exit 1
 fi
 
-if [[ -f /usr/bin/docker ]]; then
-  echo "Docker is already installed, please remove docker from this machine before installing docker-ce: dnf remove -y docker"
-  exit 1
-fi
-
 # Function to install Docker
 install_docker() {
+
+  if [[ -f /usr/bin/docker ]]; then
+    echo "Docker is already installed, please remove docker from this machine before this script can install docker-ce: dnf remove -y docker"
+    return 1
+  fi
+
   echo "Step 1: Update the package database"
   sudo dnf update -y
 
