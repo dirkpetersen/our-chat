@@ -4,7 +4,6 @@
 
 CUSTOM_CFG_PATH=${HOME}
 LIBRECHAT_PATH=${HOME}/LibreChat
-ENV_FILE=${HOME}/.env
 DEPLOY_COMPOSE=deploy-compose-ourchat-dev.yml
 CLONEDIR=$(dirname ${LIBRECHAT_PATH})
 

@@ -1,7 +1,11 @@
 #! /usr/bin/env python3
 
-import datetime
-import pymongo
+import sys, datetime
+try:
+    import pymongo
+except:
+    print('pymongo missing, to install run:\n python3 -m pip install --upgrade pymongo')
+    sys.exit(1)
 
 """ 
  # Some organizations want to purge older messages 
