@@ -9,18 +9,17 @@ br = boto3.client(service_name="bedrock")
 # Let's see all available Anthropic Models
 available_models = br.list_foundation_models()
 
+amodel = None
 for model in available_models['modelSummaries']:
-    #if 'anthropic' in model['modelId']:
-    lastmodel=model['modelId']
-    print(lastmodel)
+    if 'anthropic' in model['modelId']:
+        amodel = model['modelId']
+    print(model['modelId'])
 
 bedrock = boto3.client(service_name="bedrock-runtime")
 body = json.dumps({
   "max_tokens": 256,
   "messages": [{"role": "user", "content": "Hello, world"}],
 })
-
-response = bedrock.invoke_model(body=body, modelId=lastmodel)
-
+response = bedrock.invoke_model(body=body, modelId=amodel)
 response_body = json.loads(response.get("body").read())
-print(response_body.get("content"), flush=True)
+print("Response to 'Hello, world':",response_body.get("content"), flush=True)
