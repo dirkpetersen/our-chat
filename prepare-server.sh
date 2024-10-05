@@ -38,7 +38,7 @@ install_docker() {
   fi
 
   echo "Step 2: Install Docker packages"
-  sudo dnf install -y ${DOCKER_PACKAGES}
+  sudo dnf install -y ${DOCKER_PACKAGES} --repo ${DOCKER_REPO_FILE}
 
   echo "Step 3: Start and enable Docker service"
   sudo systemctl start docker

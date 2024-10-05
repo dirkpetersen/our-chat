@@ -15,26 +15,27 @@ An easy to install Enterprise LLM chat system using LibreChat with AWS Bedrock a
 
 ## Prepare Server 
 
-Run the [prepare-server.sh](https://raw.githubusercontent.com/dirkpetersen/our-chat/refs/heads/main/prepare-server.sh) script as root user to install docker and prepare the ochat user account. You can also start [sudo config]()
+Run the [prepare-server.sh](https://raw.githubusercontent.com/dirkpetersen/our-chat/refs/heads/main/prepare-server.sh) script as root user to install docker and prepare the ochat user account. You can also start it as a normal user if you have requested the corrent [sudo config](#i-dont-have-root-permissions)
 
 ```
 curl https://raw.githubusercontent.com/dirkpetersen/our-chat/refs/heads/main/prepare-server.sh?token=$(date +%s) | bash
 ```
 
-## Install and configure LibreChat
+## Install and configure our-chat
 
-Switch to the ochat user `sudo su - ochat` and continue with configuration. Clone the LibreChat as well as the our-chat repositories from GitHub and switch to the LibreChat repository directory
+Switch to the ochat user `sudo su - ochat` and continue with configuration. Clone the our-chat repository from GitHub and copy the .env.ochat and librechat.yml files to the root of the home directory:
 
 ```
 cd ~
 git clone https://github.com/dirkpetersen/our-chat/
-git clone https://github.com/danny-avila/LibreChat/
-cd LibreChat/
+cp ~/our-chat/.env.ochat ~/.env
+cp ~/our-chat/librechat.yml ~/librechat.yml
+cp ~/our-chat/nginx.conf ~/nginx.conf
 ```
 
 ### AWS connectivity
 
-Now we want to configure AWS credentials, run `aws configure` and enter AWS_ACCESS_KEY_ID, AWS_SECRET_ACCESS_KEY and your region (e.g. us-west-2) for the AWS service account that has only the  AmazonBedrockFullAccess policy attached or edit `~/.aws/credentials` directly.  
+As a first step configure AWS credentials, run `aws configure` and enter AWS_ACCESS_KEY_ID, AWS_SECRET_ACCESS_KEY and your region (e.g. us-west-2) for the AWS service account that has only the  AmazonBedrockFullAccess policy attached or edit `~/.aws/credentials` directly.  
 
 ```
 aws configure
@@ -43,7 +44,7 @@ aws configure
 Then test the connectivity to AWS Bedrock, by running:
 
 ```
-../our-chat/tests/bedrock-test.py
+~/our-chat/tests/bedrock-test.py
 ```
 
 you should see a list of available models and an "Hello World" prompt:
@@ -64,8 +65,66 @@ As LibreChat does not support API access you can give API users bedrock API acce
 
 You can find more details about AWS in the AWS budget section below. 
 
+## LibreChat install and Configuration
+
+Before we install LibreChat we prepare the 3 configuration files we copied to the root of the home direcotry earlier. These are minimal configuration files to support the bedrock service 
+
+### librechat.yml
+
+For example, use `vi ~/librechat.yml` to change the terms of service, modify the site footer and change a few advanced bedrock settings, for example allowed AWS regions 
+
+### nginx.conf 
+
+The only change `~/nginx.conf` likely requires, is setting the filenames for the  SSL certiticates for https.  
+
+```
+   ssl_certificate /home/ochat/ohchat.domain.edu.pem;
+   ssl_certificate_key /home/ochat/ohchat.domain.edu.pem;
+   ssl_password_file /home/ochat/ohchat.domain.edu.pw;
+```
+
+### .env
+
+`.env` contains most settings and these are exported as environment variables. First review the `BEDROCK_AWS_DEFAULT_REGION=us-west-2` and then focus on the LDAP settings: 
+
+These settings should be pretty self explanatory, for example `LDAP_LOGIN_USES_USERNAME` means that you can login with your username instead of typing your entire email address. The LDAP_SEARCH_FILTER is a bit of a crutch that we use to restrict LibreChat to members of an AD/LDAP security group. The filter was not intended for authorization and if a new user is not member of that group, they will be a 401 error (AuthN) instead of 403 (AuthZ). This can be a bit confusing. On some LDAP systems the LDAP_BIND_DN can be the email address (aka service principal) of the service accout, e.g. `myserviceaccount@domain.edu`
+
+```
+LDAP_URL=ldaps://ldap.domain.edu:636
+LDAP_USER_SEARCH_BASE=OU=User Accounts,dc=domain,dc=edu
+LDAP_BIND_DN=CN=myserviceaccount,OU=Service Accounts,OU=User Accounts,DC=domain,DC=edu
+LDAP_BIND_CREDENTIALS="ad-password"
+LDAP_LOGIN_USES_USERNAME=true
+LDAP_SEARCH_FILTER=(&(sAMAccountName={{username}})(memberOf=CN=MyGroup,OU=Groups,DC=domain,DC=edu))
+LDAP_FULL_NAME=displayName
+```
+
+After you have configured all these 7 settings, please use the LDAP test script to verify these settings, you might have to change the user id of `testuser`
+
+```
+~/our-chat/test/ldap-test.py
+
+/ldap-test.py
+Successfully read environment variables: ['LDAP_URL', 'LDAP_USER_SEARCH_BASE', 'LDAP_BIND_DN', 'LDAP_BIND_CREDENTIALS', 'LDAP_LOGIN_USES_USERNAME', 'LDAP_SEARCH_FILTER', 'LDAP_FULL_NAME']
+
+Connected as: CN=myserviceaccount,OU=Service Accounts,OU=User Accounts,DC=domain,DC=edu
+
+Evaluating LDAP_SEARCH_FILTER with testuser peterdir:
+
+Evaluating search filter: (&(sAMAccountName=peterdir)(memberOf=CN=APP oChat Users,OU=Groups,DC=domain,DC=edu))
+Found 1 matching entries:
+DN: CN=peterdir,OU=User Accounts,DC=ohsum01,DC=ohsu,DC=edu
+Attributes:
+  displayName: Dirk Petersen
+  memberOf: ['CN=unix_ochat,OU=Groups,DC=domain,DC=edu', ......
+```
 
 
+
+
+## Credentials 
+
+https://www.librechat.ai/toolkit/creds_generator
 
 
 ## Longer term vision 
@@ -81,7 +140,7 @@ In the future.
 
 In some cases your docker installation may not create a `docker` group in /etc/group. This is often because your IT department may have created a global docker group in their IAM system in order to manage their systems centrally. In that case the `groupadd docker` command will fail. There are 2 workaounds for this:
 
-1. You can try editing `/etc/group` directly and add a line `docker:x:986:ochat` to it.
+1. You can try editing `/etc/group` directly and add a line `docker:x:986:ochat` to it. The downside of this approach is, that you then have 2 different docker groups with different gidNumbers. While it should work without issues, it can be confusing, expecially if you are troubleshooting 
 1. You can create a new group (for example `ldocker`, e.g. for local docker), add the ochat user to it and ask docker to use it instead of the `docker` group. This requires these steps:
 
 - edit /etc/docker/daemon.json 
