@@ -4,8 +4,9 @@
 
 # Constants
 DOCKER_REPO_URL="https://download.docker.com/linux/rhel/docker-ce.repo"
-DOCKER_PACKAGE="docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin"
-REPO_FILE="/etc/yum.repos.d/docker-ce.repo"
+DOCKER_REPO_FILE=~/docker-ce.repo
+DOCKER_PACKAGES="docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin"
+RHEL_PACKAGES="git awscli python3-boto3 python3-pymongo python3-ldap3 python3-dotenv"
 NEWUSER="ochat"
 SHELL_BIN="/bin/bash"
 
@@ -18,8 +19,7 @@ fi
 install_rhel_packages() {
   echo "Update the package database and install packages: "
   sudo dnf update -y
-  dnf install -y git awscli
-  dnf install -y python3-boto3 python3-pymongo python3-ldap3 python3-dotenv
+  sudo dnf install -y ${RHEL_PACKAGES}
 }
 
 # Function to install Docker
@@ -31,14 +31,14 @@ install_docker() {
   fi
 
   echo "Step 1: Add Docker repository"
-  if [[ ! -f ${REPO_FILE} ]]; then
-    sudo curl -fsSL ${DOCKER_REPO_URL} -o ${REPO_FILE}
+  if [[ ! -f ${DOCKER_REPO_FILE} ]]; then
+    sudo curl -fsSL ${DOCKER_REPO_URL} -o ${DOCKER_REPO_FILE}
   else
     echo "Docker repository already exists."
   fi
 
   echo "Step 2: Install Docker packages"
-  sudo dnf install -y ${DOCKER_PACKAGE}
+  sudo dnf install -y ${DOCKER_PACKAGES}
 
   echo "Step 3: Start and enable Docker service"
   sudo systemctl start docker
@@ -46,6 +46,12 @@ install_docker() {
 
   echo "Step 4: Verify Docker installation"
   sudo docker --version
+
+  echo "Step 5: Check on Docker group"
+  if ! [[ $(getent group docker) ]]; then
+    echo -e"\n**** WARNING: Group '${GROUP_NAME}' does not exist!!"
+    echo -e"\n**** Check troubleshooting section ********* \n"
+  fi  
 }
 
 # Function to create or modify the user
