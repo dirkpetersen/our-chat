@@ -1,11 +1,63 @@
 #! /bin/bash
 
-# re-install OurChat environment
+# (re)-install LibreChat in OurChat environment 
+# To activate DEV mode, copy a custom $DEPLOY_COMPOSE
+# file to $CUSTOM_CFG_PATH and remove  api: and client: 
+# services from it, they are run in librechat-backend.service
 
 CUSTOM_CFG_PATH=${HOME}
 LIBRECHAT_PATH=${HOME}/LibreChat
-DEPLOY_COMPOSE=deploy-compose-ourchat-dev-xxx.yml
+DEPLOY_COMPOSE=deploy-compose-ourchat.yml
 CLONEDIR=$(dirname ${LIBRECHAT_PATH})
+SERVICE_NAME="librechat-backend.service"
+
+# Check if the service file already exists
+if [[ -f ${SERVICE_PATH} ]]; then
+  echo "Service file ${SERVICE_PATH} already exists."
+  exit 1
+fi
+
+# Create the systemd service file
+create_service_file() {
+  local SERVICE_PATH="${HOME}/.config/systemd/user/${SERVICE_NAME}"
+  mkdir -p "${HOME}/.config/systemd/user"
+  cat << EOF > "${SERVICE_PATH}"
+[Unit]
+Description=LibreChat Backend Server
+After=network.target
+
+[Service]
+Type=simple
+WorkingDirectory=%h/LibreChat
+ExecStart=/bin/bash -c 'source ~/.bashrc && npm run backend'
+Restart=on-failure
+Environment=PATH=/usr/local/bin:/usr/bin:/bin
+Environment=NODE_ENV=development
+
+[Install]
+WantedBy=default.target
+EOF
+}
+
+# Reload systemd user daemon, start the service, and enable it
+setup_user_service() {
+  systemctl --user daemon-reload
+  systemctl --user restart "${SERVICE_NAME}"
+  systemctl --user enable "${SERVICE_NAME}"
+  systemctl --user status "${SERVICE_NAME}"
+}
+
+aws_creds() {
+  # Retrieve static credentials
+  echo "export AWS_ACCESS_KEY_ID=$(aws configure get aws_access_key_id)" > ~/.awsrc
+  echo "export AWS_SECRET_ACCESS_KEY=$(aws configure get aws_secret_access_key)" >> ~/.awsrc
+  echo "export AWS_DEFAULT_REGION=$(aws configure get region)" >> ~/.awsrc
+  if ! grep -Fxq "source ~/.awsrc" ~/.bashrc; then
+    echo "source ~/.awsrc" >> ~/.bashrc
+    echo "~/.awsrc has been added to .bashrc"
+  fi
+  source ~/.awsrc
+}
 
 if [[ -d ${LIBRECHAT_PATH} ]]; then
   if ! [[ -f ${LIBRECHAT_PATH}/${DEPLOY_COMPOSE} ]]; then
@@ -42,14 +94,18 @@ if [[ -f ${CUSTOM_CFG_PATH}/${DEPLOY_COMPOSE} ]]; then
   echo "copying ${CUSTOM_CFG_PATH}/${DEPLOY_COMPOSE} to ${LIBRECHAT_PATH}/${DEPLOY_COMPOSE}"
   cp ${CUSTOM_CFG_PATH}/${DEPLOY_COMPOSE} ${LIBRECHAT_PATH}/
 else 
+  echo "Copying ${LIBRECHAT_PATH}/deploy-compose.yml to ${LIBRECHAT_PATH}/${DEPLOY_COMPOSE}"
   if head -n 1 "${LIBRECHAT_PATH}/deploy-compose.yml" | grep -q '^version:'; then
     tail -n +2 "${LIBRECHAT_PATH}/deploy-compose.yml" > "${LIBRECHAT_PATH}/${DEPLOY_COMPOSE}"
   else
     cp "${LIBRECHAT_PATH}/deploy-compose.yml" "${LIBRECHAT_PATH}/${DEPLOY_COMPOSE}"
   fi
-  # insert path to ssl certs /etc/librechat/certs
+  # insert path to ssl certs at /etc/librechat/certs
   sed -i '/- \.\/client\/nginx\.conf:\/etc\/nginx\/conf\.d\/default\.conf/a\      - ./client/certs:/etc/librechat/certs' "${LIBRECHAT_PATH}/${DEPLOY_COMPOSE}"
-  # use the full blown RAG container
+  # allow access to Mongo DB to purge old messages
+  sed -i '/# ports:.*# Uncomment this to access mongodb/,+1 s/^    # /    /' "${LIBRECHAT_PATH}/${DEPLOY_COMPOSE}"
+  
+  # use the full blown RAG container - not needed for bedrock 
   #sed -i 's/librechat-rag-api-dev-lite:latest/librechat-rag-api-dev:latest/g' "${LIBRECHAT_PATH}/${DEPLOY_COMPOSE}"
 
   # if not using librechat nginx make sure we can use the system nginx by using different ports
@@ -59,15 +115,17 @@ else
   fi
 fi
 
-# remove some non-functional bedrock models, work only in dev mode 
+# remove some non-functional bedrock models; this works only in dev mode 
 sed -i "/^[[:space:]]*'ai21.jamba-instruct-v1:0',/s/^[[:space:]]*/&\/\/ /" \
               ${LIBRECHAT_PATH}/packages/data-provider/src/config.ts
 
+# pull aws credentials into env vars
+aws_creds
 
 # .env file
 if [[ -f ${CUSTOM_CFG_PATH}/.env ]]; then
-  echo "copying ${CUSTOM_CFG_PATH}/.env to ${LIBRECHAT_PATH}/.env"
-  cp  ${CUSTOM_CFG_PATH}/.env ${LIBRECHAT_PATH}/.env
+  echo "copying ${CUSTOM_CFG_PATH}/.env to ${LIBRECHAT_PATH}/.env and expanding env vars"
+  envsubst < ${CUSTOM_CFG_PATH}/.env > ${LIBRECHAT_PATH}/.env
 else
   echo ".env.example to .env"
   cp  ${LIBRECHAT_PATH}/.env.example ${LIBRECHAT_PATH}/.env
@@ -75,7 +133,7 @@ fi
 
 # librechat.yaml
 if [[ -f ${CUSTOM_CFG_PATH}/librechat.yaml ]]; then
-  echo "copying ${CUSTOM_CFG_PATH}/librechat.yaml to ${LIBRECHAT_PATH}/librechat.yaml"
+  echo "Copying ${CUSTOM_CFG_PATH}/librechat.yaml to ${LIBRECHAT_PATH}/librechat.yaml"
   cp  ${CUSTOM_CFG_PATH}/librechat.yaml ${LIBRECHAT_PATH}/librechat.yaml
 else
   echo "copying librechat.example.yaml to librechat.yaml"
@@ -87,7 +145,7 @@ if [[ -f ${CUSTOM_CFG_PATH}/nginx.conf ]]; then
   if ! [[ -f ${LIBRECHAT_PATH}/client/nginx.conf.org  ]]; then
     mv ${LIBRECHAT_PATH}/client/nginx.conf ${LIBRECHAT_PATH}/client/nginx.conf.org
   fi 
-  echo "copying ${CUSTOM_CFG_PATH}/nginx.conf to ${LIBRECHAT_PATH}/client/nginx.conf"
+  echo "Copying ${CUSTOM_CFG_PATH}/nginx.conf to ${LIBRECHAT_PATH}/client/nginx.conf"
   cp  ${CUSTOM_CFG_PATH}/nginx.conf ${LIBRECHAT_PATH}/client/nginx.conf
   mkdir -p ${LIBRECHAT_PATH}/client/certs
   cp ${CUSTOM_CFG_PATH}/*.pem ${LIBRECHAT_PATH}/client/certs
@@ -96,7 +154,7 @@ fi
 
 # docker-compose.override.yml
 if [[ -f ${CUSTOM_CFG_PATH}/docker-compose.override.yml ]]; then
-  echo "copying ${CUSTOM_CFG_PATH}/docker-compose.override.yml to ${LIBRECHAT_PATH}"
+  echo "Copying ${CUSTOM_CFG_PATH}/docker-compose.override.yml to ${LIBRECHAT_PATH}"
   cp ${CUSTOM_CFG_PATH}/docker-compose.override.yml ${LIBRECHAT_PATH}
 fi
 
@@ -111,6 +169,7 @@ if [[ -f ${CUSTOM_CFG_PATH}/${DEPLOY_COMPOSE} ]]; then
   npm run frontend 
   #npm run backend # run by systemd
   echo "systemctl --user status librechat-backend .... "
-  systemctl --user restart librechat-backend
-  systemctl --user status librechat-backend
+  # Main script execution
+  create_service_file
+  setup_user_service
 fi

@@ -13,8 +13,9 @@ except:
 """  
 
 DAYSAGO=30
+PORT='27018'
 
-client = pymongo.MongoClient("mongodb://127.0.0.1:27017")
+client = pymongo.MongoClient(f"mongodb://127.0.0.1:{PORT}")
 # print(client.server_info())
 db = client['LibreChat']
 messages = db['messages']
