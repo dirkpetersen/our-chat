@@ -49,8 +49,8 @@ install_docker() {
 
   echo "Step 5: Check on Docker group"
   if ! [[ $(getent group docker) ]]; then
-    echo -e"\n**** WARNING: Group '${GROUP_NAME}' does not exist!!"
-    echo -e"\n**** Check troubleshooting section ********* \n"
+    echo -e "\n**** WARNING: Group '${GROUP_NAME}' does not exist!!"
+    echo -e "**** Check troubleshooting section ********* \n"
   fi  
 }
 

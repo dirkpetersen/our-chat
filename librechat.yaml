@@ -2,7 +2,7 @@
 # https://www.librechat.ai/docs/configuration/librechat_yaml
 
 # Configuration version (required)
-version: 1.1.5
+version: 1.1.7
 
 # Cache settings: Set to true to enable caching
 cache: true
@@ -19,17 +19,17 @@ interface:
     externalUrl: 'https://librechat.ai/tos'
     openNewTab: true
     modalAcceptance: true
-    modalTitle: "Terms of Service for LibreChat @ OHSU "
+    modalTitle: "Terms of Service for LibreChat "
     modalContent: |
       # Terms and Conditions for LibreChat
 
       *Effective Date: September 30, 2024*
 
-      Welcome to LibreChat at OHSU the informational website for the open-source AI chat platform, available at https://ochat.ohsu.edu
+      Welcome to LibreChat, the informational website for the open-source AI chat platform.
 
-      ## 1. OHSU Notice 
+      ## 1. Notice 
 
-      This is a private system. All users of this system are subject to having their activities audited. This system is to be used only for OHSU business, and access requires explicit written authorization. Unauthorized access or attempts to damage data, programs, or equipment may violate applicable law and could result in corrective action or criminal prosecution. 
+      This is a private system. All users of this system are subject to having their activities audited. This system is to be used only for internal business, and access requires explicit written authorization. Unauthorized access or attempts to damage data, programs, or equipment may violate applicable law and could result in corrective action or criminal prosecution. 
 
 
       ## 2. Non-Personal Data Collection
@@ -43,14 +43,17 @@ interface:
 # Definition of custom endpoints
 endpoints:
   bedrock:
-    availableRegions:
-      - "us-west-2"
+    #availableRegions:
+    #  - "us-west-1"
+    #  - "us-west-2"
+    #  - "us-east-1"
+    #  - "us-east-2"
     streamRate: 75 
     titleModel: 'anthropic.claude-3-haiku-20240307-v1:0'
   
   # custom:
   #   - name: "Llama-CPP A40"
-  #     apiKey: "${OHSU_API_KEY}"
+  #     apiKey: "${YOUR_API_KEY}"
   #     baseURL: "http://127.0.0.1:13013/llama-cpp-server/v1"
   #     models:
   #       default: ["Meta-Llama-3.1-70B"]
@@ -63,7 +66,7 @@ endpoints:
   #     modelDisplayLabel: "Llama-CPP A40"
 
   #   - name: "Llama-CPP A100"
-  #     apiKey: "${OHSU_API_KEY}"
+  #     apiKey: "${YOUR_API_KEY}"
   #     baseURL: "http://127.0.0.1:13013/a100-llama-cpp-server/v1"
   #     models:
   #       default: ["Meta-Llama-3.1-405B"]

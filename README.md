@@ -1,6 +1,8 @@
 # Our Chat !
 
-An easy to install Enterprise LLM chat system using LibreChat with AWS Bedrock and LDAP/AD authentication. Why is this needed, can't users just access AWS Bedrock directly? They might, however, in most organizations the AWS Console is reserved for power users, as it typically takes some time until you are familiar with it (to put it mildly). [LibreChat](https://www.librechat.ai/) on the other hand, takes zero on-boarding time, users just login with their enterprise credentials and enter their prompts. Another reason is LibreChat's superior user interface. It has gained extreme popularity and is among the top 10 projects on Github.
+**An easy to install Enterprise LLM chat system using LibreChat with AWS Bedrock and LDAP/AD authentication.** 
+
+Why is this needed? Can't users just access AWS Bedrock directly? They might, however, in most organizations the AWS Console is reserved for power users, as it typically takes some time until you are familiar with it (to put it mildly). [LibreChat](https://www.librechat.ai/) on the other hand, takes zero on-boarding time, users just login with their enterprise credentials and enter their prompts. Another reason is LibreChat's superior user interface. It has gained extreme popularity and is among the top 10 projects on Github.
 
 ![image](https://github.com/user-attachments/assets/85422848-7875-4c87-8f62-2582e8e07775)
 
