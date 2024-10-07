@@ -59,6 +59,20 @@ aws_creds() {
   source ~/.awsrc
 }
 
+purge_cron_job() {
+  # Determine the current script's directory
+  SCRIPT_DIR=$(dirname "$(realpath "${BASH_SOURCE[0]}")")
+  # Set the full path to the script to be run
+  SCRIPT_PATH="${SCRIPT_DIR}/purge_old_messages.py"
+  # Define the cron job entry
+  CRON_JOB="22 2 * * * \"${SCRIPT_PATH}\" > ~/purge_old_messages.log 2>&1"
+  # Add the cron job for the current user
+  if ! crontab -l | grep -Fq "${SCRIPT_PATH}"; then
+    ( crontab -l; echo "${CRON_JOB}" ) | crontab -
+    echo "Cron job added to run ${SCRIPT_PATH} daily at 2:22 AM."
+  fi  
+}
+
 if [[ -d ${LIBRECHAT_PATH} ]]; then
   if ! [[ -f ${LIBRECHAT_PATH}/${DEPLOY_COMPOSE} ]]; then
     echo "System has not been deployed with"
@@ -91,7 +105,7 @@ cd ${CLONEDIR}
 git clone https://github.com/danny-avila/LibreChat.git
 
 if [[ -f ${CUSTOM_CFG_PATH}/${DEPLOY_COMPOSE} ]]; then
-  echo "copying ${CUSTOM_CFG_PATH}/${DEPLOY_COMPOSE} to ${LIBRECHAT_PATH}/${DEPLOY_COMPOSE}"
+  echo "Copying ${CUSTOM_CFG_PATH}/${DEPLOY_COMPOSE} to ${LIBRECHAT_PATH}/${DEPLOY_COMPOSE}"
   cp ${CUSTOM_CFG_PATH}/${DEPLOY_COMPOSE} ${LIBRECHAT_PATH}/
 else 
   echo "Copying ${LIBRECHAT_PATH}/deploy-compose.yml to ${LIBRECHAT_PATH}/${DEPLOY_COMPOSE}"
@@ -124,7 +138,7 @@ aws_creds
 
 # .env file
 if [[ -f ${CUSTOM_CFG_PATH}/.env ]]; then
-  echo "copying ${CUSTOM_CFG_PATH}/.env to ${LIBRECHAT_PATH}/.env and expanding env vars"
+  echo "Copying ${CUSTOM_CFG_PATH}/.env to ${LIBRECHAT_PATH}/.env and expanding env vars"
   envsubst < ${CUSTOM_CFG_PATH}/.env > ${LIBRECHAT_PATH}/.env
 else
   echo ".env.example to .env"
@@ -136,7 +150,7 @@ if [[ -f ${CUSTOM_CFG_PATH}/librechat.yaml ]]; then
   echo "Copying ${CUSTOM_CFG_PATH}/librechat.yaml to ${LIBRECHAT_PATH}/librechat.yaml"
   cp  ${CUSTOM_CFG_PATH}/librechat.yaml ${LIBRECHAT_PATH}/librechat.yaml
 else
-  echo "copying librechat.example.yaml to librechat.yaml"
+  echo "Copying librechat.example.yaml to librechat.yaml"
   cp  ${LIBRECHAT_PATH}/librechat.example.yaml ${LIBRECHAT_PATH}/librechat.yaml
 fi
 
@@ -157,6 +171,8 @@ if [[ -f ${CUSTOM_CFG_PATH}/docker-compose.override.yml ]]; then
   echo "Copying ${CUSTOM_CFG_PATH}/docker-compose.override.yml to ${LIBRECHAT_PATH}"
   cp ${CUSTOM_CFG_PATH}/docker-compose.override.yml ${LIBRECHAT_PATH}
 fi
+
+purge_cron_job
 
 docker compose -f ${LIBRECHAT_PATH}/${DEPLOY_COMPOSE} up -d
 
