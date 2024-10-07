@@ -11,7 +11,8 @@ Why is this needed? Can't users just access AWS Bedrock directly? They might, ho
 
 - Get a RHEL virtual server (this process was tested with RHEL 9.4) with at least 8GB RAM and 50GB free disk space of which about half should be under /home . 
 - That machine must be able to talk to the `ldaps port 636` of your enterprise LDAP server (for example Active Directory). 
-- You should also request some SSL certificates, unless you use Let's encrypt
+- An LDAP/AD security group that contains the users who are allowed to use the chat system. For now we call this group `our-chat-users`.
+- An SSL certificate, unless you use Let's encrypt
 - AWS credentials (AWS_ACCESS_KEY_ID, AWS_SECRET_ACCESS_KEY) for an AWS service account (perhaps called librechat or ochat) that has no permissions except for the AmazonBedrockFullAccess policy attached to it. 
 - You don't require root access if your sysadmins can run the `prepare-server.sh` script for you, but they should allow you to switch to the ochat user, e.g. `sudo su - ochat`
 
@@ -23,21 +24,11 @@ Run the [prepare-server.sh](https://raw.githubusercontent.com/dirkpetersen/our-c
 curl https://raw.githubusercontent.com/dirkpetersen/our-chat/refs/heads/main/prepare-server.sh?token=$(date +%s) | bash
 ```
 
-## Install and configure our-chat
+Now switch to the ochat user `sudo su - ochat` and continue with configuration.
 
-Switch to the ochat user `sudo su - ochat` and continue with configuration. Clone the our-chat repository from GitHub and copy the .env.ochat, librechat.yml and nginx.conf files to the root of the home directory:
+## AWS connectivity
 
-```
-cd ~
-git clone https://github.com/dirkpetersen/our-chat/
-cp ~/our-chat/.env.ochat ~/.env
-cp ~/our-chat/librechat.yml ~/librechat.yml
-cp ~/our-chat/nginx.conf ~/nginx.conf
-```
-
-### AWS connectivity
-
-As a first step configure AWS credentials, run `aws configure` and enter AWS_ACCESS_KEY_ID, AWS_SECRET_ACCESS_KEY and your region (e.g. us-west-2) for the AWS service account that has only the  AmazonBedrockFullAccess policy attached or edit `~/.aws/credentials` directly.  
+After you have switched ochat user using `sudo su - ochat`, first configure AWS credentials: run `aws configure` and enter AWS_ACCESS_KEY_ID, AWS_SECRET_ACCESS_KEY and your region (e.g. us-west-2) for the AWS service account that has only the  AmazonBedrockFullAccess policy attached. You can also edit `~/.aws/credentials` and `~/.aws/config` directly, if you prefer.  
 
 ```
 aws configure
@@ -63,33 +54,39 @@ mistral.mistral-large-2407-v1:0
 Response to 'Hello, world': Hello! How can I assist you today? Feel free to ask me anything or let me know if you need help with a specific topic.
 ```
 
-As LibreChat does not support API access you can give API users bedrock API access in their AWS account and bedrock-test.py may serve as a good initial example. 
+If you don't get that or the script shows an error, go back to your AWS Administrator for troubleshooting before you continue.
+
+As LibreChat does not support API access you can give API users Bedrock API access in their AWS account and bedrock-test.py may serve as a good initial example. 
 
 You can find more details about AWS in the AWS budget section below. 
 
+## SSL certificates 
+
+Here we cover the standard case, which is you receiving SSL certs from your enterrprise team. In many cases your team will send you a PKCS12 archive which comes as a *.pfx file along with a password. At the end of this process you should have `~/our-chat.pem` and `~/our-chat.pw` at the root of the ochat home directory. (Please note: If you leave a space at the beginning of the echo "yourpassword" line, the password will not end up in your bash history)
+
+```
+ echo "yourpassword" > ~/our-chat.pw
+chmod 600 ~/our-chat.pw
+openssl rsa -in original-cert.pfx -out > ~/our-chat.pem
+```
+
 ## LibreChat install and Configuration
 
-Before we install LibreChat we prepare the 3 configuration files we copied to the root of the home direcotry earlier. These are minimal configuration files to support the bedrock service 
-
-### librechat.yml
-
-For example, use `vi ~/librechat.yml && cp ~/librechat.yml ~/LibreChat/librechat.yml` to change the terms of service, modify the site footer and change a few advanced bedrock settings, for example allowed AWS regions,
-
-### nginx.conf 
-
-The only change `~/nginx.conf` likely requires, is setting the filenames for the  SSL certiticates for https.  
+Instead of installing LibreChat directly, please clone the our-chat repository from GitHub and copy the .env.ochat, librechat.yml and nginx.conf files to the root of the home directory of the ochat user:
 
 ```
-   ssl_certificate /home/ochat/ohchat.domain.edu.pem;
-   ssl_certificate_key /home/ochat/ohchat.domain.edu.pem;
-   ssl_password_file /home/ochat/ohchat.domain.edu.pw;
+cd ~
+git clone https://github.com/dirkpetersen/our-chat/
+cp ~/our-chat/.env.ochat ~/.env
+cp ~/our-chat/librechat.yaml ~/librechat.yaml
+cp ~/our-chat/nginx.conf ~/nginx.conf
 ```
+
+You will likelty need to edit each of these config files at some point, but for now you only need to edit the `~/.env` file to enable LDAP authentication and to update a few security tokens
 
 ### .env
 
-`.env` contains most settings and these are exported as environment variables. First review the `BEDROCK_AWS_DEFAULT_REGION=us-west-2` and then focus on the LDAP settings: 
-
-These settings should be pretty self explanatory, for example `LDAP_LOGIN_USES_USERNAME` means that you can login with your username instead of typing your entire email address. The LDAP_SEARCH_FILTER is a bit of a crutch that we use to restrict LibreChat to members of an AD/LDAP security group. The filter was not intended for authorization and if a new user is not member of that group, they will be a 401 error (AuthN) instead of 403 (AuthZ). This can be a bit confusing. On some LDAP systems the LDAP_BIND_DN can be the email address (aka service principal) of the service accout, e.g. `myserviceaccount@domain.edu`
+Please find these settings in .env
 
 ```
 LDAP_URL=ldaps://ldap.domain.edu:636
@@ -101,7 +98,10 @@ LDAP_SEARCH_FILTER=(&(sAMAccountName={{username}})(memberOf=CN=MyGroup,OU=Groups
 LDAP_FULL_NAME=displayName
 ```
 
-After you have configured all these 7 settings, please use the LDAP test script to verify these settings, you might have to change the user id of `testuser`
+They should be pretty self explanatory, for example `LDAP_LOGIN_USES_USERNAME` means that you can login with your username instead of typing your entire email address. The LDAP_SEARCH_FILTER is a bit of a crutch that we use to restrict LibreChat to members of an AD/LDAP security group. The filter was not intended for authorization and if a new user is not member of that group, they will be a 401 error (AuthN) instead of 403 (AuthZ). This can be a bit confusing. On some LDAP systems the LDAP_BIND_DN can be the email address (aka service principal) of the service accout, e.g. `myserviceaccount@domain.edu` but it is safest to use the DN (distinguished name).
+
+
+After you have configured all these 7 settings, please use the LDAP test script to verify these settings, you might have to change the user id of `testuser` 
 
 ```
 ~/our-chat/test/ldap-test.py
@@ -126,6 +126,24 @@ And as a final step we want to setup unique tokens for
 CREDS_KEY, CREDS_IV, JWT_SECRET, JWT_REFRESH_SECRET and MEILI_MASTER_KEY
 
 Go to https://www.librechat.ai/toolkit/creds_generator, generate keys and put them in .env 
+
+
+
+### librechat.yml
+
+For example, use `vi ~/librechat.yml && cp ~/librechat.yml ~/LibreChat/librechat.yml` to change the terms of service, modify the site footer and change a few advanced bedrock settings, for example allowed AWS regions,
+
+### nginx.conf 
+
+The only change `~/nginx.conf` likely requires, is setting the filenames for the  SSL certiticates for https.  
+
+```
+   ssl_certificate /home/ochat/ohchat.domain.edu.pem;
+   ssl_certificate_key /home/ochat/ohchat.domain.edu.pem;
+   ssl_password_file /home/ochat/ohchat.domain.edu.pw;
+```
+
+
 
 # INSTALL 
 

@@ -9,7 +9,9 @@ except:
     print('ldap3/dotenv missing, to install run:\n python3 -m pip install --upgrade ldap3 python-dotenv')
     sys.exit(1)
 
-testuser = 'peterdir'
+testuser = ''
+if len(sys.argv) == 2:
+    testuser = sys.argv[1]
 
 def load_env_file(env_file_path):
     if not os.path.exists(env_file_path):
@@ -119,5 +121,8 @@ if __name__ == "__main__":
     print("Connected as:", conn.user)
 
     # Evaluate the search filter
-    print(f"\nEvaluating LDAP_SEARCH_FILTER with testuser {testuser}:\n ")
-    eval_search_filter(conn, search_base, search_filter, testuser)
+    if testuser:
+        print(f"\nEvaluating LDAP_SEARCH_FILTER with testuser {testuser}:\n ")
+        eval_search_filter(conn, search_base, search_filter, testuser)
+    else:
+        print('No testuser passed as argument, cannot evaluate LDAP_SEARCH_FILTER')
