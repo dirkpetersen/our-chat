@@ -94,17 +94,17 @@ LDAP_USER_SEARCH_BASE=OU=User Accounts,dc=domain,dc=edu
 LDAP_BIND_DN=CN=myserviceaccount,OU=Service Accounts,OU=User Accounts,DC=domain,DC=edu
 LDAP_BIND_CREDENTIALS="ad-password"
 LDAP_LOGIN_USES_USERNAME=true
-LDAP_SEARCH_FILTER=(&(sAMAccountName={{username}})(memberOf=CN=MyGroup,OU=Groups,DC=domain,DC=edu))
+LDAP_SEARCH_FILTER=(&(sAMAccountName={{username}})(memberOf=CN=our-chat-users,OU=Groups,DC=domain,DC=edu))
 LDAP_FULL_NAME=displayName
 ```
 
 They should be pretty self explanatory, for example `LDAP_LOGIN_USES_USERNAME` means that you can login with your username instead of typing your entire email address. The LDAP_SEARCH_FILTER is a bit of a crutch that we use to restrict LibreChat to members of an AD/LDAP security group. The filter was not intended for authorization and if a new user is not member of that group, they will be a 401 error (AuthN) instead of 403 (AuthZ). This can be a bit confusing. On some LDAP systems the LDAP_BIND_DN can be the email address (aka service principal) of the service accout, e.g. `myserviceaccount@domain.edu` but it is safest to use the DN (distinguished name).
 
 
-After you have configured all these 7 settings, please use the LDAP test script to verify these settings, you might have to change the user id of `testuser` 
+After you have configured all these 7 settings, please use the LDAP test script to verify these settings. To check the LDAP_SEARCH_FILTER you have to pass the username of a test user who is member of that security group (e.g. our-chat-users)
 
 ```
-~/our-chat/test/ldap-test.py
+~/our-chat/test/ldap-test.py peterdir
 
 /ldap-test.py
 Successfully read environment variables: ['LDAP_URL', 'LDAP_USER_SEARCH_BASE', 'LDAP_BIND_DN', 'LDAP_BIND_CREDENTIALS', 'LDAP_LOGIN_USES_USERNAME', 'LDAP_SEARCH_FILTER', 'LDAP_FULL_NAME']
@@ -113,7 +113,7 @@ Connected as: CN=myserviceaccount,OU=Service Accounts,OU=User Accounts,DC=domain
 
 Evaluating LDAP_SEARCH_FILTER with testuser peterdir:
 
-Evaluating search filter: (&(sAMAccountName=peterdir)(memberOf=CN=APP oChat Users,OU=Groups,DC=domain,DC=edu))
+Evaluating search filter: (&(sAMAccountName=peterdir)(memberOf=CN=our-chat-users,OU=Groups,DC=domain,DC=edu))
 Found 1 matching entries:
 DN: CN=peterdir,OU=User Accounts,DC=ohsum01,DC=ohsu,DC=edu
 Attributes:
@@ -125,29 +125,31 @@ And as a final step we want to setup unique tokens for
 
 CREDS_KEY, CREDS_IV, JWT_SECRET, JWT_REFRESH_SECRET and MEILI_MASTER_KEY
 
-Go to https://www.librechat.ai/toolkit/creds_generator, generate keys and put them in .env 
+Go to https://www.librechat.ai/toolkit/creds_generator, generate keys and put them in ~/.env 
 
+```
+vi ~/.env
+```
 
+You can 
 
-### librechat.yml
+### librechat.yml (optional)
 
 For example, use `vi ~/librechat.yml && cp ~/librechat.yml ~/LibreChat/librechat.yml` to change the terms of service, modify the site footer and change a few advanced bedrock settings, for example allowed AWS regions,
 
-### nginx.conf 
+### nginx.conf (optional)
 
-The only change `~/nginx.conf` likely requires, is setting the filenames for the  SSL certiticates for https.  
+The only change `~/nginx.conf` likely requires, is setting the filenames for the  SSL certiticates for httpsi if you choose a different cerificate name than our-chat.pem .
 
 ```
-   ssl_certificate /home/ochat/ohchat.domain.edu.pem;
-   ssl_certificate_key /home/ochat/ohchat.domain.edu.pem;
-   ssl_password_file /home/ochat/ohchat.domain.edu.pw;
+   ssl_certificate /etc/librechat/ssl/our-chat.pem;
+   ssl_certificate_key /etc/librechat/ssl/our-chat.pem;
+   ssl_password_file /etc/librechat/ssl/our-chat.pw;
 ```
 
+# Install LibreChat
 
-
-# INSTALL 
-
-Running install-librechat.sh
+If all the prep work is done correctly we should be able to run `install-librechat.sh` and have a running system in a few seconds 
 
 ```
 ~/our-chat/install-librechat.sh
@@ -159,10 +161,14 @@ remote: Compressing objects: 100% (1247/1247), done.
 remote: Total 33792 (delta 5103), reused 4786 (delta 4622), pack-reused 27912 (from 1)
 Receiving objects: 100% (33792/33792), 43.72 MiB | 44.24 MiB/s, done.
 Resolving deltas: 100% (24182/24182), done.
-Copying /home/librechat/LibreChat/deploy-compose.yml to /home/librechat/LibreChat/deploy-compose-ourchat.yml
-Copying /home/librechat/.env to /home/librechat/LibreChat/.env and expanding env vars
-Copying /home/librechat/librechat.yaml to /home/librechat/LibreChat/librechat.yaml
-Copying /home/librechat/nginx.conf to /home/librechat/LibreChat/client/nginx.conf
+Copying /home/ochat/LibreChat/deploy-compose.yml to /home/ochat/LibreChat/deploy-compose-ourchat.yml
+~/.awsrc has been added to .bashrc
+Copying /home/ochat/.env to /home/ochat/LibreChat/.env and expanding env vars
+Copying /home/ochat/librechat.yaml to /home/ochat/LibreChat/librechat.yaml
+Copying /home/ochat/nginx.conf to /home/ochat/LibreChat/client/nginx.conf
+Generating DH parameters, 2048 bit long safe prime
+.
+.
 [+] Running 8/8
  ✔ Network librechat_default       Created
  ✔ Volume "librechat_pgdata2"      Created 
@@ -172,9 +178,15 @@ Copying /home/librechat/nginx.conf to /home/librechat/LibreChat/client/nginx.con
  ✔ Container librechat-rag_api-1   Started 
  ✔ Container LibreChat-API         Started 
  ✔ Container LibreChat-NGINX       Started 
-stopping: docker compose -f /home/librechat/LibreChat/deploy-compose-ourchat.yml down
-starting: docker compose -f /home/librechat/LibreChat/deploy-compose-ourchat.yml up -d
+
+no crontab for ochat
+Cron job added to run /home/ochat/purge_old_messages.py daily at 2:22 AM
+
+stopping: docker compose -f /home/ochat/LibreChat/deploy-compose-ourchat.yml down
+starting: docker compose -f /home/ochat/LibreChat/deploy-compose-ourchat.yml up -d
 ```
+
+Now try to access your chat system, e.g. `https://ourchat.domain.edu`. If you encounter issues, please see the [troubleshooting](#troubleshooting) section below.
 
 
 ## Longer term vision 
@@ -188,7 +200,7 @@ In the future.
 
 ### Get debug output
 
-Setup debug output, open ~/.env in editor 
+If something is not working, the first step is to enable debugging and bringing up the docker containers in non-daemon mode so that they are printing all logs to the console. Setup debug output, open ~/.env in editor 
 
 ```
 vi ~/.env && cp ~/.env ~/LibreChat/
