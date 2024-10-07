@@ -1,6 +1,6 @@
 # Our Chat !
 
-An easy to install Enterprise LLM chat system using LibreChat with AWS Bedrock and LDAP/AD authentication. If you have access to AWS Bedrock, why don't you use that? The problem is that the AWS Console is reserved for power users in most organizations, also it will take some time until you are familiar with it (to put it mildly). [LibreChat](https://www.librechat.ai/) on the other hand, takes zero on-boarding time, users just login with their enterprise credentials and enter their prompts:
+An easy to install Enterprise LLM chat system using LibreChat with AWS Bedrock and LDAP/AD authentication. Why is this needed, can't users just access AWS Bedrock directly? They might, however, in most organizations the AWS Console is reserved for power users, as it typically takes some time until you are familiar with it (to put it mildly). [LibreChat](https://www.librechat.ai/) on the other hand, takes zero on-boarding time, users just login with their enterprise credentials and enter their prompts. Another reason is LibreChat's superior user interface. It has gained extreme popularity and is among the top 10 projects on Github.
 
 ![image](https://github.com/user-attachments/assets/85422848-7875-4c87-8f62-2582e8e07775)
 
@@ -15,7 +15,7 @@ An easy to install Enterprise LLM chat system using LibreChat with AWS Bedrock a
 
 ## Prepare Server 
 
-Run the [prepare-server.sh](https://raw.githubusercontent.com/dirkpetersen/our-chat/refs/heads/main/prepare-server.sh) script as root user to install docker and prepare the ochat user account. You can also start it as a normal user if you have requested the corrent [sudo config](#i-dont-have-root-permissions)
+Run the [prepare-server.sh](https://raw.githubusercontent.com/dirkpetersen/our-chat/refs/heads/main/prepare-server.sh) script as root user to install docker and prepare the ochat user account. You can also start it as a normal user if you have requested the correct [sudo config](#i-dont-have-root-permissions)
 
 ```
 curl https://raw.githubusercontent.com/dirkpetersen/our-chat/refs/heads/main/prepare-server.sh?token=$(date +%s) | bash
@@ -23,7 +23,7 @@ curl https://raw.githubusercontent.com/dirkpetersen/our-chat/refs/heads/main/pre
 
 ## Install and configure our-chat
 
-Switch to the ochat user `sudo su - ochat` and continue with configuration. Clone the our-chat repository from GitHub and copy the .env.ochat and librechat.yml files to the root of the home directory:
+Switch to the ochat user `sudo su - ochat` and continue with configuration. Clone the our-chat repository from GitHub and copy the .env.ochat, librechat.yml and nginx.conf files to the root of the home directory:
 
 ```
 cd ~
@@ -71,7 +71,7 @@ Before we install LibreChat we prepare the 3 configuration files we copied to th
 
 ### librechat.yml
 
-For example, use `vi ~/librechat.yml` to change the terms of service, modify the site footer and change a few advanced bedrock settings, for example allowed AWS regions 
+For example, use `vi ~/librechat.yml && cp ~/librechat.yml ~/LibreChat/librechat.yml` to change the terms of service, modify the site footer and change a few advanced bedrock settings, for example allowed AWS regions,
 
 ### nginx.conf 
 
@@ -125,9 +125,37 @@ CREDS_KEY, CREDS_IV, JWT_SECRET, JWT_REFRESH_SECRET and MEILI_MASTER_KEY
 
 Go to https://www.librechat.ai/toolkit/creds_generator, generate keys and put them in .env 
 
-
-
 # INSTALL 
+
+Running install-librechat.sh
+
+```
+~/our-chat/install-librechat.sh
+
+Cloning into 'LibreChat'...
+remote: Enumerating objects: 33792, done.
+remote: Counting objects: 100% (5880/5880), done.
+remote: Compressing objects: 100% (1247/1247), done.
+remote: Total 33792 (delta 5103), reused 4786 (delta 4622), pack-reused 27912 (from 1)
+Receiving objects: 100% (33792/33792), 43.72 MiB | 44.24 MiB/s, done.
+Resolving deltas: 100% (24182/24182), done.
+Copying /home/librechat/LibreChat/deploy-compose.yml to /home/librechat/LibreChat/deploy-compose-ourchat.yml
+Copying /home/librechat/.env to /home/librechat/LibreChat/.env and expanding env vars
+Copying /home/librechat/librechat.yaml to /home/librechat/LibreChat/librechat.yaml
+Copying /home/librechat/nginx.conf to /home/librechat/LibreChat/client/nginx.conf
+[+] Running 8/8
+ ✔ Network librechat_default       Created
+ ✔ Volume "librechat_pgdata2"      Created 
+ ✔ Container chat-mongodb          Started 
+ ✔ Container chat-meilisearch      Started 
+ ✔ Container librechat-vectordb-1  Started 
+ ✔ Container librechat-rag_api-1   Started 
+ ✔ Container LibreChat-API         Started 
+ ✔ Container LibreChat-NGINX       Started 
+stopping: docker compose -f /home/librechat/LibreChat/deploy-compose-ourchat.yml down
+starting: docker compose -f /home/librechat/LibreChat/deploy-compose-ourchat.yml up -d
+```
+
 
 ## Longer term vision 
 
@@ -137,6 +165,25 @@ In the future.
 
 
 ## Troubleshooting 
+
+### Get debug output
+
+Setup debug output, open ~/.env in editor 
+
+```
+vi ~/.env && cp ~/.env ~/LibreChat/
+```
+
+and set `DEBUG_LOGGING=true` 
+
+Open up a second terminal, shutdown the containers and bring them up again, this time  (`up without a -d`)
+
+```
+docker compose -f ~/LibreChat/deploy-compose-ourchat.yml down
+docker compose -f ~/LibreChat/deploy-compose-ourchat.yml up
+```
+
+Check for error messages. When you are done, execute the `down` and then the `up -d`. command 
 
 ### cannot create docker group
 
