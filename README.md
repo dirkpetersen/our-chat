@@ -104,7 +104,7 @@ They should be pretty self explanatory, for example `LDAP_LOGIN_USES_USERNAME` m
 After you have configured all these 7 settings, please use the LDAP test script to verify these settings. To check the LDAP_SEARCH_FILTER you have to pass the username of a test user who is member of that security group (e.g. our-chat-users)
 
 ```
-~/our-chat/test/ldap-test.py peterdir
+~/our-chat/tests/ldap-test.py peterdir
 
 /ldap-test.py
 Successfully read environment variables: ['LDAP_URL', 'LDAP_USER_SEARCH_BASE', 'LDAP_BIND_DN', 'LDAP_BIND_CREDENTIALS', 'LDAP_LOGIN_USES_USERNAME', 'LDAP_SEARCH_FILTER', 'LDAP_FULL_NAME']
