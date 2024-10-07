@@ -10,7 +10,7 @@ except:
     sys.exit(1)
 
 testuser = ''
-if len(sys.argv) == 2:
+if len(sys.argv) > 1:
     testuser = sys.argv[1]
 
 def load_env_file(env_file_path):
