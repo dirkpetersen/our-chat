@@ -92,12 +92,13 @@ def eval_search_filter(conn, search_base, search_filter, username):
 
 if __name__ == "__main__":
     
-    env_file_path = '.env'    
+    env_file_path = '../.env'
+    if len(sys.argv) == 3:
+        env_file_path = sys.argv[2]
     if not os.path.isfile(env_file_path):
-        if len(sys.argv) != 2:
-            print("Usage: python script.py </folder/.env>")
-            sys.exit(1)
-        env_file_path = sys.argv[1]
+        if len(sys.argv) != 3:
+            print(f"{env_file_path} not found. Usage: python script.py <testuser> </folder/.env>")
+            sys.exit(1)        
 
     if not env_file_path.endswith('.env'):
         env_file_path = os.path.join(env_file_path,'.env')
