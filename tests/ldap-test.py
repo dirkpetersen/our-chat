@@ -20,7 +20,7 @@ def load_env_file(env_file_path):
         sys.exit(1)
     
     dotenv.load_dotenv(env_file_path)
-    required_vars = ['LDAP_URL', 'LDAP_USER_SEARCH_BASE', 'LDAP_BIND_DN', 'LDAP_BIND_CREDENTIALS', 'LDAP_LOGIN_USES_USERNAME', 'LDAP_SEARCH_FILTER', 'LDAP_FULL_NAME']
+    required_vars = ['LDAP_URL', 'LDAP_USER_SEARCH_BASE', 'LDAP_BIND_DN', 'LDAP_BIND_CREDENTIALS', 'LDAP_LOGIN_USES_USERNAME', 'LDAP_FULL_NAME']
     missing_vars = [var for var in required_vars if not os.getenv(var)]
     
     if missing_vars:
