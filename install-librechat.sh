@@ -4,7 +4,7 @@
 
 CUSTOM_CFG_PATH=${HOME}
 LIBRECHAT_PATH=${HOME}/LibreChat
-DEPLOY_COMPOSE=deploy-compose-ourchat-dev.yml
+DEPLOY_COMPOSE=deploy-compose-ourchat-dev-xxx.yml
 CLONEDIR=$(dirname ${LIBRECHAT_PATH})
 
 if [[ -d ${LIBRECHAT_PATH} ]]; then
@@ -47,12 +47,19 @@ else
   else
     cp "${LIBRECHAT_PATH}/deploy-compose.yml" "${LIBRECHAT_PATH}/${DEPLOY_COMPOSE}"
   fi
-  # setup proxy
-  sed -i '/ports:/,/^[^ ]/ s/- 80:80/- 2080:80/; /ports:/,/^[^ ]/ s/- 443:443/- 2443:443/' \
+  # insert path to ssl certs /etc/librechat/certs
+  sed -i '/- \.\/client\/nginx\.conf:\/etc\/nginx\/conf\.d\/default\.conf/a\      - ./client/certs:/etc/librechat/certs' "${LIBRECHAT_PATH}/${DEPLOY_COMPOSE}"
+  # use the full blown RAG container
+  #sed -i 's/librechat-rag-api-dev-lite:latest/librechat-rag-api-dev:latest/g' "${LIBRECHAT_PATH}/${DEPLOY_COMPOSE}"
+
+  # if not using librechat nginx make sure we can use the system nginx by using different ports
+  if ! [[ -f ${CUSTOM_CFG_PATH}/nginx.conf ]]; then 
+    sed -i '/ports:/,/^[^ ]/ s/- 80:80/- 2080:80/; /ports:/,/^[^ ]/ s/- 443:443/- 2443:443/' \
               ${LIBRECHAT_PATH}/${DEPLOY_COMPOSE}
+  fi
 fi
 
-# remove some non-functional bedrock models
+# remove some non-functional bedrock models, work only in dev mode 
 sed -i "/^[[:space:]]*'ai21.jamba-instruct-v1:0',/s/^[[:space:]]*/&\/\/ /" \
               ${LIBRECHAT_PATH}/packages/data-provider/src/config.ts
 
@@ -66,6 +73,7 @@ else
   cp  ${LIBRECHAT_PATH}/.env.example ${LIBRECHAT_PATH}/.env
 fi
 
+# librechat.yaml
 if [[ -f ${CUSTOM_CFG_PATH}/librechat.yaml ]]; then
   echo "copying ${CUSTOM_CFG_PATH}/librechat.yaml to ${LIBRECHAT_PATH}/librechat.yaml"
   cp  ${CUSTOM_CFG_PATH}/librechat.yaml ${LIBRECHAT_PATH}/librechat.yaml
@@ -74,6 +82,19 @@ else
   cp  ${LIBRECHAT_PATH}/librechat.example.yaml ${LIBRECHAT_PATH}/librechat.yaml
 fi
 
+# client/nginx.conf
+if [[ -f ${CUSTOM_CFG_PATH}/nginx.conf ]]; then
+  if ! [[ -f ${LIBRECHAT_PATH}/client/nginx.conf.org  ]]; then
+    mv ${LIBRECHAT_PATH}/client/nginx.conf ${LIBRECHAT_PATH}/client/nginx.conf.org
+  fi 
+  echo "copying ${CUSTOM_CFG_PATH}/nginx.conf to ${LIBRECHAT_PATH}/client/nginx.conf"
+  cp  ${CUSTOM_CFG_PATH}/nginx.conf ${LIBRECHAT_PATH}/client/nginx.conf
+  mkdir -p ${LIBRECHAT_PATH}/client/certs
+  cp ${CUSTOM_CFG_PATH}/*.pem ${LIBRECHAT_PATH}/client/certs
+  cp ${CUSTOM_CFG_PATH}/*.pw ${LIBRECHAT_PATH}/client/certs  
+fi
+
+# docker-compose.override.yml
 if [[ -f ${CUSTOM_CFG_PATH}/docker-compose.override.yml ]]; then
   echo "copying ${CUSTOM_CFG_PATH}/docker-compose.override.yml to ${LIBRECHAT_PATH}"
   cp ${CUSTOM_CFG_PATH}/docker-compose.override.yml ${LIBRECHAT_PATH}
@@ -93,4 +114,3 @@ if [[ -f ${CUSTOM_CFG_PATH}/${DEPLOY_COMPOSE} ]]; then
   systemctl --user restart librechat-backend
   systemctl --user status librechat-backend
 fi
-

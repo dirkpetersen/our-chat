@@ -119,13 +119,15 @@ Attributes:
   memberOf: ['CN=unix_ochat,OU=Groups,DC=domain,DC=edu', ......
 ```
 
+And as a final step we want to setup unique tokens for 
+
+CREDS_KEY, CREDS_IV, JWT_SECRET, JWT_REFRESH_SECRET and MEILI_MASTER_KEY
+
+Go to https://www.librechat.ai/toolkit/creds_generator, generate keys and put them in .env 
 
 
 
-## Credentials 
-
-https://www.librechat.ai/toolkit/creds_generator
-
+# INSTALL 
 
 ## Longer term vision 
 
