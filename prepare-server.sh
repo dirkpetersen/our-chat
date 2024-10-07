@@ -10,12 +10,6 @@ RHEL_PACKAGES="git awscli python3-boto3 python3-pymongo python3-ldap3 python3-do
 NEWUSER="ochat"
 SHELL_BIN="/bin/bash"
 
-# Ensure the script is run as root
-if [[ $(id -u) -ne 0 ]]; then
-  echo "This script must be run as root. Exiting."
-  exit 1
-fi
-
 install_rhel_packages() {
   echo "Update the package database and install packages: "
   sudo dnf update -y
