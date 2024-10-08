@@ -20,35 +20,36 @@ Other big benefits:
 Table of Contents:
 
 <!-- vscode-markdown-toc -->
-1. [Prerequisites](#Prerequisites)
-2. [Prepare Server](#PrepareServer)
-3. [Prepare install](#Prepareinstall)
-4. [AWS connectivity](#AWSconnectivity)
-5. [SSL certificates](#SSLcertificates)
-6. [LibreChat install and Configuration](#LibreChatinstallandConfiguration)
-	* 6.1. [.env](#env)
-	* 6.2. [librechat.yml (optional)](#librechat.ymloptional)
-	* 6.3. [nginx.conf (optional)](#nginx.confoptional)
-7. [Budgeting](#Budgeting)
-8. [API usage](#APIusage)
-9. [Purging of old chats](#Purgingofoldchats)
-10. [Longer term vision](#Longertermvision)
-11. [Troubleshooting](#Troubleshooting)
-	* 11.1. [Get debug output](#Getdebugoutput)
-	* 11.2. [cannot create docker group](#cannotcreatedockergroup)
-	* 11.3. [I don't have root permissions](#Idonthaverootpermissions)
-	* 11.4. [ssl certificate tricks](#sslcertificatetricks)
-	* 11.5. [Cleaning up docker](#Cleaningupdocker)
+* [Prerequisites](#Prerequisites)
+* [Prepare Server](#PrepareServer)
+* [Prepare install](#Prepareinstall)
+* [AWS connectivity](#AWSconnectivity)
+* [SSL certificates](#SSLcertificates)
+* [LibreChat install and Configuration](#LibreChatinstallandConfiguration)
+	* [.env](#env)
+	* [librechat.yml (optional)](#librechat.ymloptional)
+	* [nginx.conf (optional)](#nginx.confoptional)
+* [Install LibreChat](#InstallLibreChat)
+* [Budgeting](#Budgeting)
+* [API usage](#APIusage)
+* [Purging of old chats](#Purgingofoldchats)
+* [Longer term vision](#Longertermvision)
+* [Troubleshooting](#Troubleshooting)
+	* [Get debug output](#Getdebugoutput)
+	* [cannot create docker group](#cannotcreatedockergroup)
+	* [I don't have root permissions](#Idonthaverootpermissions)
+	* [ssl certificate tricks](#sslcertificatetricks)
+	* [Cleaning up docker](#Cleaningupdocker)
 
 <!-- vscode-markdown-toc-config
-	numbering=true
+	numbering=false
 	autoSave=true
 	/vscode-markdown-toc-config -->
 <!-- /vscode-markdown-toc -->
 
 
 
-##  1. <a name='Prerequisites'></a>Prerequisites 
+## <a name='Prerequisites'></a>Prerequisites 
 
 - Get a RHEL virtual server (this process was tested with RHEL 9.4) with at least 8GB RAM and 50GB free disk space of which about half should be under /home . 
 - That machine must be able to talk to the `ldaps port 636` of your enterprise LDAP server (for example Active Directory). 
@@ -57,7 +58,7 @@ Table of Contents:
 - AWS credentials (AWS_ACCESS_KEY_ID, AWS_SECRET_ACCESS_KEY) for an AWS service account (perhaps called librechat or ochat) that has no permissions except for the AmazonBedrockFullAccess policy attached to it. 
 - You don't require root access if your sysadmins can run the `prepare-server.sh` script for you, but they should allow you to switch to the ochat user, e.g. `sudo su - ochat`
 
-##  2. <a name='PrepareServer'></a>Prepare Server 
+## <a name='PrepareServer'></a>Prepare Server 
 
 Run the [prepare-server.sh](https://raw.githubusercontent.com/dirkpetersen/our-chat/refs/heads/main/prepare-server.sh) script as root user to install docker and prepare the `ochat` user account. You can also start it as a normal user if you have requested the correct [sudo config](#i-dont-have-root-permissions)
 
@@ -67,7 +68,7 @@ curl https://raw.githubusercontent.com/dirkpetersen/our-chat/refs/heads/main/pre
 
 Now switch to the ochat user `sudo su - ochat` and continue with [Prepare install](#prepare-install).
 
-##  3. <a name='Prepareinstall'></a>Prepare install
+## <a name='Prepareinstall'></a>Prepare install
 
 After switching to the ochat user (`sudo su - ochat`), please clone the [our-chat](https://github.com/dirkpetersen/our-chat/) repository from GitHub and copy the .env.ochat, librechat.yml and nginx.conf files to the root of the home directory of the ochat user:
 
@@ -79,7 +80,7 @@ cp ~/our-chat/librechat.yaml ~/librechat.yaml
 cp ~/our-chat/nginx.conf ~/nginx.conf
 ```
 
-##  4. <a name='AWSconnectivity'></a>AWS connectivity
+## <a name='AWSconnectivity'></a>AWS connectivity
 
 Export the AWS credentials and region of the Bedrock service account (the one that has only the AmazonBedrockFullAccess policy attached) to environment variables :
 
@@ -116,7 +117,7 @@ If you don't get that response or the script shows an error, go back to your AWS
 
 You can find more details about AWS in the AWS budget section below. 
 
-##  5. <a name='SSLcertificates'></a>SSL certificates 
+## <a name='SSLcertificates'></a>SSL certificates 
 
 Here we cover the standard case of you receiving SSL certs from your enterprise team. In many cases your team will send you a PKCS12 archive which comes as a *.pfx file along with an import password. After entering the import password, you need to set a new PEM pass phrase. At the end of this process you should have `~/our-chat.pem` and `~/our-chat.pw` at the root of the ochat home directory. (Please note: If you **leave a space at the beginning** of the echo "your-pem-passphrase" line, the pass phrase will not end up in your bash history). 
 
@@ -132,11 +133,11 @@ chmod 600 ~/our-chat.*
 
 ```
 
-##  6. <a name='LibreChatinstallandConfiguration'></a>LibreChat install and Configuration
+## <a name='LibreChatinstallandConfiguration'></a>LibreChat install and Configuration
 
 You will likelty need to edit each of these config files at some point, but for now you should only edit the `~/.env` file to enable LDAP authentication and to update a few security tokens
 
-###  6.1. <a name='env'></a>.env
+### <a name='env'></a>.env
 
 Please find these settings in ~/.env
 
@@ -187,11 +188,11 @@ vi ~/.env
 
 You can likely skip the next 2 config files for now, but might want to change them later 
 
-###  6.2. <a name='librechat.ymloptional'></a>librechat.yml (optional)
+### <a name='librechat.ymloptional'></a>librechat.yml (optional)
 
 For example, use `vi ~/librechat.yml && cp ~/librechat.yml ~/LibreChat/librechat.yml` to change the terms of service, modify the site footer and change a few advanced bedrock settings, for example allowed AWS regions. 
 
-###  6.3. <a name='nginx.confoptional'></a>nginx.conf (optional)
+### <a name='nginx.confoptional'></a>nginx.conf (optional)
 
 The only change `vi ~/nginx.conf && cp ~/nginx.conf ~/LibreChat/client/nginx.conf` likely requires, is setting the filenames for the SSL certificates for https, if you choose a different cerificate name than our-chat.pem / our-chat.pw . You can set addional nginx headers to further enhance security.
 
@@ -201,7 +202,7 @@ The only change `vi ~/nginx.conf && cp ~/nginx.conf ~/LibreChat/client/nginx.con
    ssl_password_file /etc/librechat/ssl/our-chat.pw;
 ```
 
-# Install LibreChat
+## <a name='InstallLibreChat'></a>Install LibreChat
 
 When all the prep work is done correctly, you should be able to run `install-librechat.sh` and have a running system in a few seconds:
 
@@ -243,29 +244,29 @@ starting: docker compose -f /home/ochat/LibreChat/deploy-compose-ourchat.yml up 
 Now try to access your chat system, e.g. `https://ourchat.domain.edu`. If you encounter issues, please see the [troubleshooting](#troubleshooting) section below.
 
 
-##  7. <a name='Budgeting'></a>Budgeting 
+## <a name='Budgeting'></a>Budgeting 
 
 Since LibreChat does not support cost control at this time, we need to rely on AWS. The service `AWS Budgets` is a good start but we realize quickly, that this product is for alerting only and does actually not stop services from being used, if there is a budget overrun. Now, AWS will point out that there is another service called `AWS Budget Actions` but it seems, those are mainly triggering `AWS Lambda` scripts. They also lack the flexibilty we need, and that raises the question, why we are not just running an hourly Lambda script to check where we are with our spend. 
 Let's assume, our monthly budget is $1000 (and not a penny more). If we disable the service after $950 has been spent, this may happen at the first day of the month and then nobody will be able to use the system for the rest of the month. We could also set the budget to $32 per day and with max 31 days in a month we would never exceed $992 / month. But that would mean people cannot really do big things and we want to support innovation. We do not want someone to be constrained by the $32 per day if only $100 has been spent this month. So let's see, if we can accumulate the budget. For example, if the system has not been used for 3 days, we would set the budget of the 4th day to $128 (`$32*4`). If someone came and used that entire amount on the 4th day, we would start fresh on the 5th day, and the budget would be $32 per day again. In an extreme case, assume the system has not been used for the first 30 days in a month. Then someone could come along and use $960 (`$32*30`) on the 31st day and we would still be within budget. 
 
-##  8. <a name='APIusage'></a>API usage 
+## <a name='APIusage'></a>API usage 
 
 LibreChat does not support API access (there is the RAG API feature, but that is a bit of a misnomer, as it actually requires the web ui). Instead, LibreChat is an aggregation point for many different APIs for users. Currently, LibreChat does not support complex cost control and all users of one server will access the same AWS account and there is only one single line item on the invoice and we cannot who was responsible for the cost. API users can automate their workflows which can lead to runaway costs. This means that API users should get their own AWS account with their own budget control and access the Bedrock API direcly. ~/our-chat/tests/bedrock-test.py may service as a resonable initial example that can list LLMs and ask a question.
 
-##  9. <a name='Purgingofoldchats'></a>Purging of old chats
+## <a name='Purgingofoldchats'></a>Purging of old chats
 
 Especially in healthcare environments we want to make sure that sensitive data does not reside on systems any longer than necessary. As of October 2024 LibreChat does not have the ability to purge data, however OurChat by default has a [purge script](https://github.com/dirkpetersen/our-chat/blob/main/purge_old_messages.py) activated, that deletes any messages and files older than X days. (30 days by default)
  
-##  10. <a name='Longertermvision'></a>Longer term vision 
+## <a name='Longertermvision'></a>Longer term vision 
 
 In the future we may extend our chat eco-system, and add apps with addional capabilities but at this time LibreChat seems to meet our needs. 
 
 ![our-chat-dark](https://github.com/dirkpetersen/our-chat/assets/1427719/6fbbc55d-8bf3-4c7f-8d09-990c3ee3c2e6)
 
 
-##  11. <a name='Troubleshooting'></a>Troubleshooting 
+## <a name='Troubleshooting'></a>Troubleshooting 
 
-###  11.1. <a name='Getdebugoutput'></a>Get debug output
+### <a name='Getdebugoutput'></a>Get debug output
 
 If something is not working, the first step is to enable debugging and bringing up the docker containers in non-daemon mode so that they are printing all logs to the console. Setup debug output, open ~/.env in editor 
 
@@ -284,7 +285,7 @@ docker compose -f ~/LibreChat/deploy-compose-ourchat.yml up
 
 Check for error messages. When you are done, execute the `down` and then the `up -d`. command 
 
-###  11.2. <a name='cannotcreatedockergroup'></a>cannot create docker group
+### <a name='cannotcreatedockergroup'></a>cannot create docker group
 
 In some cases your docker installation may not create a `docker` group in /etc/group. This is often because your IT department may have created a global docker group in their IAM system in order to manage their systems centrally. In that case the `groupadd docker` command will fail. There are 2 workaounds for this:
 
@@ -321,7 +322,7 @@ srw-rw----. 1 root ldocker 0 Oct  4 21:23 /var/run/docker.sock
 If this is not working, please remove the docker packages using `dnf` and reinstall docker
 
 
-###  11.3. <a name='Idonthaverootpermissions'></a>I don't have root permissions 
+### <a name='Idonthaverootpermissions'></a>I don't have root permissions 
 
 If your IT infrastructure team cannot give you `root` access to the virtual server you requested, you may still be able to get access to management features via sudo. Ask your sysadmin to run `visudo` and paste in the config below. Change yourusername to your actual user name:
 
@@ -331,13 +332,13 @@ yourusername (ALL) !/usr/bin/su -
 yourusername (ALL) !/usr/bin/su - root
 ```
 
-###  11.4. <a name='sslcertificatetricks'></a>ssl certificate tricks
+### <a name='sslcertificatetricks'></a>ssl certificate tricks
 
 ```
 openssl rsa -in original-cert.pfx -out > ~/our-chat.pem
 ```
 
-###  11.5. <a name='Cleaningupdocker'></a>Cleaning up docker 
+### <a name='Cleaningupdocker'></a>Cleaning up docker 
 
 ```
 ### cleanup as root
