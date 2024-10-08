@@ -38,7 +38,6 @@ Table of Contents:
 	* [Get debug output](#Getdebugoutput)
 	* [cannot create docker group](#cannotcreatedockergroup)
 	* [I don't have root permissions](#Idonthaverootpermissions)
-	* [ssl certificate tricks](#sslcertificatetricks)
 	* [Cleaning up docker](#Cleaningupdocker)
 
 <!-- vscode-markdown-toc-config
@@ -331,12 +330,6 @@ If your IT infrastructure team cannot give you `root` access to the virtual serv
 yourusername (ALL) NOPASSWD: /usr/bin/dnf, /usr/bin/rpm, /usr/bin/systemctl, /usr/bin/loginctl enable-linger *, /usr/bin/docker, /usr/bin/vi /etc/nginx/nginx.conf, /usr/bin/vi /etc/nginx/sites-available/*, /usr/bin/nginx, /usr/sbin/useradd, /usr/sbin/userdel, /usr/sbin/usermod -aG docker *, /usr/sbin/reboot, /usr/bin/su - *
 yourusername (ALL) !/usr/bin/su -
 yourusername (ALL) !/usr/bin/su - root
-```
-
-### <a name='sslcertificatetricks'></a>ssl certificate tricks
-
-```
-openssl rsa -in original-cert.pfx -out > ~/our-chat.pem
 ```
 
 ### <a name='Cleaningupdocker'></a>Cleaning up docker 
