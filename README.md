@@ -25,7 +25,7 @@ Table of Contents:
 * [Prepare install](#Prepareinstall)
 * [AWS connectivity](#AWSconnectivity)
 * [SSL certificates](#SSLcertificates)
-* [LibreChat install and Configuration](#LibreChatinstallandConfiguration)
+* [LibreChat Configuration](#LibreChatConfiguration)
 	* [.env](#env)
 	* [librechat.yml (optional)](#librechat.ymloptional)
 	* [nginx.conf (optional)](#nginx.confoptional)
@@ -133,7 +133,7 @@ chmod 600 ~/our-chat.*
 
 ```
 
-## <a name='LibreChatinstallandConfiguration'></a>LibreChat install and Configuration
+## <a name='LibreChatConfiguration'></a>LibreChat Configuration
 
 You will likelty need to edit each of these config files at some point, but for now you should only edit the `~/.env` file to enable LDAP authentication and to update a few security tokens
 
