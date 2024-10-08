@@ -6,7 +6,7 @@
 DOCKER_REPO_URL="https://download.docker.com/linux/rhel/docker-ce.repo"
 DOCKER_REPO_FILE=~/docker-ce.repo
 DOCKER_PACKAGES="docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin"
-RHEL_PACKAGES="git awscli python3-boto3 python3-pymongo python3-ldap3 python3-dotenv"
+RHEL_PACKAGES="git python3-pip python3-boto3 python3-pymongo python3-ldap3 python3-dotenv"
 NEWUSER="ochat"
 SHELL_BIN="/bin/bash"
 
