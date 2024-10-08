@@ -14,7 +14,7 @@ Other big benefits:
 - No per-user cost. Even a few hundred ChatGPT users can cost an organization hundreds of thousands of dollars per year. With LibreChat you can serve tens of thousands of users and only pay the API cost of what they actually use. 
 - No configuration needed to prevent the cloud LLM form learning with your data. All API use in Bedrock as well as OpenAI is excluded from learning usage.
 - Presumably better security: OpenAI, Anthropic and other startups have significantly smaller cyber security operations than the cloud Hyperscalers, such as AWS, Azure & Google.
-- Unified user interface: In addition to Bedrock you can use OpenAI or Google API all within the same interface
+- Unified user interface: In addition to Bedrock you can use OpenAI or Google API or even [on-prem use cases](#On-premisesusecases) all within the same interface
 
 
 Table of Contents:
@@ -33,6 +33,7 @@ Table of Contents:
 * [Budgeting](#Budgeting)
 * [API usage](#APIusage)
 * [Purging of old chats](#Purgingofoldchats)
+* [On-premises use cases](#On-premisesusecases)
 * [Longer term vision](#Longertermvision)
 * [Troubleshooting](#Troubleshooting)
 	* [Get debug output](#Getdebugoutput)
@@ -256,6 +257,10 @@ LibreChat does not support API access (there is the RAG API feature, but that is
 ## <a name='Purgingofoldchats'></a>Purging of old chats
 
 Especially in healthcare environments we want to make sure that sensitive data does not reside on systems any longer than necessary. As of October 2024 LibreChat does not have the ability to purge data, however OurChat by default has a [purge script](https://github.com/dirkpetersen/our-chat/blob/main/purge_old_messages.py) activated, that deletes any messages and files older than X days. (30 days by default)
+
+## <a name='On-premisesusecases'></a>On-premises use cases
+
+If you have use cases that are not permitted to use cloud services (e.g. patent issues), you can use on premises GPUs or even [connect to your HPC cluster](https://github.com/dirkpetersen/forever-slurm) and use those resources all within the same LibreChat interface. Configure these custom endpoints [in .env](https://github.com/dirkpetersen/our-chat/blob/main/.env.ochat#L57) and [in librechat.yaml](https://github.com/dirkpetersen/our-chat/blob/main/librechat.yaml#L54)
  
 ## <a name='Longertermvision'></a>Longer term vision 
 
