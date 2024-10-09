@@ -12,7 +12,7 @@ except:
  # to stay compliant with their regulatory framework
 """  
 
-DAYSAGO=30
+DAYSAGO=60
 PORT='27018'
 
 client = pymongo.MongoClient(f"mongodb://127.0.0.1:{PORT}")
