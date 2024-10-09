@@ -1,20 +1,20 @@
 # Our Chat !
 
-**An easy to install Enterprise LLM chat system using LibreChat with AWS Bedrock and LDAP/AD authentication.** 
+**An easy-to-install Enterprise LLM chat system using LibreChat with AWS Bedrock and LDAP/AD authentication.** 
 
-Why is this needed? Can't users just access AWS Bedrock directly? They might, however, in most organizations the AWS Console is reserved for power users, as it typically takes some time until you are familiar with it (to put it mildly). 
+Why is this needed? Can't users just access AWS Bedrock directly? They might; however, in most organizations, the AWS Console is reserved for power users, as it typically takes some time until you are familiar with it (to put it mildly). 
 
-[LibreChat](https://www.librechat.ai/) on the other hand, takes zero on-boarding time, users simply login with their enterprise credentials, and use the system just like ChatGPT or Claude.ai. Another reason to like LibreChat is its superior user interface. It has gained much popularity and is [often trending](https://trendshift.io/repositories/4685) on GitHub.
+[LibreChat](https://www.librechat.ai/), on the other hand, takes zero on-boarding time; users simply login with their enterprise credentials and use the system just like ChatGPT or Claude.ai. Another reason to like LibreChat is its superior user interface. It has gained much popularity and is [often trending](https://trendshift.io/repositories/4685) on GitHub.
 
 ![image](https://github.com/user-attachments/assets/85422848-7875-4c87-8f62-2582e8e07775)
 
 
 Other big benefits: 
 
-- No per-user cost. Even a few hundred ChatGPT users can cost an organization hundreds of thousands of dollars per year. With LibreChat you can serve tens of thousands of users and only pay the API cost of what they actually use. 
-- No configuration needed to prevent the cloud LLM from learning with your data. All API use in Bedrock as well as OpenAI is excluded from learning usage.
-- Presumably better security: OpenAI, Anthropic and other startups have significantly smaller cyber security operations than the cloud Hyperscalers, such as AWS, Azure & Google.
-- Unified user interface: In addition to Bedrock you can use OpenAI or Google API or even [on-prem use cases](#On-premisesusecases) all within the same interface
+- No per-user cost. Even a few hundred ChatGPT users can cost an organization hundreds of thousands of dollars per year. With LibreChat, you can serve tens of thousands of users and only pay the API cost of what they actually use. 
+- No configuration needed to prevent the cloud LLM from learning with your data. All API use in Bedrock, as well as OpenAI, is excluded from learning usage.
+- Presumably better security: OpenAI, Anthropic, and other startups have significantly smaller cybersecurity operations than the cloud Hyperscalers, such as AWS, Azure, & Google.
+- Unified user interface: In addition to Bedrock, you can use OpenAI or Google API or even [on-prem use cases](#On-premisesusecases), all within the same interface.
 
 
 Table of Contents:
@@ -51,12 +51,12 @@ Table of Contents:
 
 ## <a name='Prerequisites'></a>Prerequisites 
 
-- Get a RHEL virtual server (this process was tested with RHEL 9.4) with at least 8GB RAM and 50GB free disk space of which about half should be under /home . As this server might process sensitive data ask for all security software (log forwarder, Antivirus/malware, intrusion prevention to be preinstalled)
-- That machine must be able to talk to the `ldaps port 636` of your enterprise LDAP server (for example Active Directory). 
-- An LDAP/AD security group that contains the users who are allowed to use the chat system. For now we call this group `our-chat-users`.
-- An SSL certificate, unless you use Let's encrypt
+- Get a RHEL virtual server (this process was tested with RHEL 9.4) with at least 8GB RAM and 50GB free disk space, of which about half should be under /home. As this server might process sensitive data, ask for all security software (log forwarder, Antivirus/malware, intrusion prevention) to be preinstalled.
+- That machine must be able to talk to the `ldaps port 636` of your enterprise LDAP server (for example, Active Directory). 
+- An LDAP/AD security group that contains the users who are allowed to use the chat system. For now, we call this group `our-chat-users`.
+- An SSL certificate, unless you use Let's Encrypt.
 - AWS credentials (AWS_ACCESS_KEY_ID, AWS_SECRET_ACCESS_KEY) for an AWS service account (perhaps called librechat or ochat) that has no permissions except for the AmazonBedrockFullAccess policy attached to it. 
-- You don't require root access if your sysadmins can run the `prepare-server.sh` script for you, but they should allow you to switch to the ochat user, e.g. `sudo su - ochat`
+- You don't require root access if your sysadmins can run the `prepare-server.sh` script for you, but they should allow you to switch to the ochat user, e.g., `sudo su - ochat`.
 
 ## <a name='PrepareServer'></a>Prepare Server 
 
