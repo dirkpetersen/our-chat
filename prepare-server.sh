@@ -6,14 +6,15 @@
 DOCKER_REPO_URL="https://download.docker.com/linux/rhel/docker-ce.repo"
 DOCKER_REPO_FILE=~/docker-ce.repo
 DOCKER_PACKAGES="docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin"
-RHEL_PACKAGES="git python3-pip python3-boto3 python3-pymongo python3-ldap3 python3-dotenv"
+RHEL_PACKAGES="git python3-pip python3-boto3 python3-pymongo python3-ldap3"
 NEWUSER="ochat"
 SHELL_BIN="/bin/bash"
 
-install_rhel_packages() {
+install_packages() {
   echo "Update the package database and install packages: "
   sudo dnf update -y
-  sudo dnf install -y ${RHEL_PACKAGES}
+  sudo dnf install -y --skip-broken ${RHEL_PACKAGES}
+  #sudo apt-get install package1 package2 package3 --ignore-missing || true
 }
 
 # Function to install Docker
