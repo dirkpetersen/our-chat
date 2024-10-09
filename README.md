@@ -293,22 +293,26 @@ mv ~/LibreChat ~/LibreChat.fail.1
 
 ## <a name='DisasterRecoveryBusinessContinuity'></a>Disaster Recovery / Business Continuity / Emergency Operation
 
-As the system only stores data temporarily, disaster recovery and business continuity procedures are limited to backing up 3 configuraton files in a secure place: 
+As the system only stores data temporarily, disaster recovery and business continuity procedures are limited to backing up 5 configuraton files / certificates in a secure place: 
 
 ```
 ~/.env
 ~/librechat.yaml
 ~/nginx.conf
+~/our-chat.pem
+~/our-chat.pw
 ```
 
 The install procedures at https://github.com/dirkpetersen/our-chat also serve as disaster recovery process as they are enabling you to restore service in less than 30 minutes, once you have the prerequisites met. (You may decide to have  another VM already running to reduce the provisioning time).
 
-While following the install procedures do not edit any of the 3 files but restore them from your secure location and copy them into your LibreChat installation.
+While following the install procedures do not edit any of the 5 files but restore them from your secure backup location to `~/` (the root of the home direcotry of the service account) and copy them to the right locations in your LibreChat installation:
 
 ```
 cp ~/.env ~/LibreChat/
 cp ~/librechat.yaml ~/LibreChat/
 cp ~/nginx.conf ~/LibreChat/client/
+cp ~/our-chat.pem ~/LibreChat/client/ssl/
+cp ~/our-chat.pw ~/LibreChat/client/ssl/
 ```
 
 ## <a name='On-premisesusecases'></a>On-premises use cases

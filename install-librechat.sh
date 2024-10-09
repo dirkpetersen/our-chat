@@ -114,8 +114,8 @@ else
   else
     cp "${LIBRECHAT_PATH}/deploy-compose.yml" "${LIBRECHAT_PATH}/${DEPLOY_COMPOSE}"
   fi
-  # insert path to ssl certs at /etc/librechat/certs
-  sed -i '/- \.\/client\/nginx\.conf:\/etc\/nginx\/conf\.d\/default\.conf/a\      - ./client/certs:/etc/librechat/ssl' "${LIBRECHAT_PATH}/${DEPLOY_COMPOSE}"
+  # insert path to ssl certs at /etc/librechat/ssl
+  sed -i '/- \.\/client\/nginx\.conf:\/etc\/nginx\/conf\.d\/default\.conf/a\      - ./client/ssl:/etc/librechat/ssl' "${LIBRECHAT_PATH}/${DEPLOY_COMPOSE}"
   # allow access to Mongo DB to purge old messages
   sed -i '/# ports:.*# Uncomment this to access mongodb/,+1 s/^    # /    /' "${LIBRECHAT_PATH}/${DEPLOY_COMPOSE}"
   
@@ -161,10 +161,13 @@ if [[ -f ${CUSTOM_CFG_PATH}/nginx.conf ]]; then
   fi 
   echo "Copying ${CUSTOM_CFG_PATH}/nginx.conf to ${LIBRECHAT_PATH}/client/nginx.conf"
   cp  ${CUSTOM_CFG_PATH}/nginx.conf ${LIBRECHAT_PATH}/client/nginx.conf
-  mkdir -p ${LIBRECHAT_PATH}/client/certs
-  cp ${CUSTOM_CFG_PATH}/*.pem ${LIBRECHAT_PATH}/client/certs
-  cp ${CUSTOM_CFG_PATH}/*.pw ${LIBRECHAT_PATH}/client/certs 
-  openssl dhparam -out ${LIBRECHAT_PATH}/client/certs/dhparam 2048
+  mkdir -p ${LIBRECHAT_PATH}/client/ssl
+  cp ${CUSTOM_CFG_PATH}/*.pem ${LIBRECHAT_PATH}/client/ssl
+  cp ${CUSTOM_CFG_PATH}/*.pw ${LIBRECHAT_PATH}/client/ssl
+  
+  if ! curl -f https://ssl-config.mozilla.org/ffdhe2048.txt -o ${LIBRECHAT_PATH}/client/ssl/dhparam; then 
+    openssl dhparam -out ${LIBRECHAT_PATH}/client/ssl/dhparam 2048
+  fi 
 fi
 
 # docker-compose.override.yml
