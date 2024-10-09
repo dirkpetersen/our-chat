@@ -52,7 +52,7 @@ Table of Contents:
 ## <a name='Prerequisites'></a>Prerequisites 
 
 - Get a RHEL virtual server (this process was tested with RHEL 9.4) with at least 8GB RAM and 50GB free disk space, of which about half should be under /home. As this server might process sensitive data, ask for all security software (log forwarder, Antivirus/malware, intrusion prevention) to be preinstalled.
-- That machine must be able to talk to the `ldaps port 636` of your enterprise LDAP server (for example, Active Directory). 
+- This machine must be able to communicate with the `ldaps port 636` of your enterprise LDAP server (for example, Active Directory). 
 - An LDAP/AD security group that contains the users who are allowed to use the chat system. For now, we call this group `our-chat-users`.
 - An SSL certificate, unless you use Let's Encrypt.
 - AWS credentials (AWS_ACCESS_KEY_ID, AWS_SECRET_ACCESS_KEY) for an AWS service account (perhaps called librechat or ochat) that has no permissions except for the AmazonBedrockFullAccess policy attached to it. 
@@ -60,13 +60,13 @@ Table of Contents:
 
 ## <a name='PrepareServer'></a>Prepare Server 
 
-Run the [prepare-server.sh](https://raw.githubusercontent.com/dirkpetersen/our-chat/refs/heads/main/prepare-server.sh) script as root user to install docker and prepare the `ochat` user account. You can also start it as a normal user if you have requested the correct [sudo config](#i-dont-have-root-permissions)
+Run the [prepare-server.sh](https://raw.githubusercontent.com/dirkpetersen/our-chat/refs/heads/main/prepare-server.sh) script as root user to install docker and prepare the `ochat` user account. You can also start it as a normal user if you have requested the correct [sudo config](#i-dont-have-root-permissions).
 
 ```
 curl https://raw.githubusercontent.com/dirkpetersen/our-chat/refs/heads/main/prepare-server.sh?token=$(date +%s) | bash
 ```
 
-Now switch to the ochat user `sudo su - ochat` and continue with [Prepare install](#prepare-install).
+Now switch to the ochat user with `sudo su - ochat` and continue with [Prepare install](#prepare-install).
 
 ## <a name='Prepareinstall'></a>Prepare install
 
@@ -82,7 +82,7 @@ cp ~/our-chat/nginx.conf ~/nginx.conf
 
 ## <a name='AWSconnectivity'></a>AWS connectivity
 
-Export the AWS credentials and region of the Bedrock service account (the one that has only the AmazonBedrockFullAccess policy attached) to environment variables :
+Export the AWS credentials and region of the Bedrock service account (the one that has only the AmazonBedrockFullAccess policy attached) to environment variables:
 
 ```
 export AWS_ACCESS_KEY_ID=abcdefghijklmnopqrstuvwxyz
@@ -90,13 +90,13 @@ export AWS_SECRET_ACCESS_KEY=abcdefghijklmnopqrstuvwxyz123456
 export AWS_DEFAULT_REGION=us-west-2
 ```
 
-Then test the connectivity to AWS Bedrock, by running:
+Then test the connectivity to AWS Bedrock by running:
 
 ```
 ~/our-chat/tests/bedrock-test.py
 ```
 
-You should see that your credentials have been written to the right places under ~/.aws and Bedrock shows a list of available models and reponds to a "Hello World" prompt:
+You should see that your credentials have been written to the correct places under ~/.aws and Bedrock shows a list of available models and responds to a "Hello World" prompt:
 
 ```
 Written to /home/librechat/.aws/credentials: AWS credentials for [default]
@@ -135,11 +135,11 @@ chmod 600 ~/our-chat.*
 
 ## <a name='LibreChatConfiguration'></a>LibreChat Configuration
 
-You will likelty need to edit each of these config files at some point, but for now you should only edit the `~/.env` file to enable LDAP authentication and to update a few security tokens
+You will likely need to edit each of these config files at some point, but for now you should only edit the `~/.env` file to enable LDAP authentication and to update a few security tokens.
 
 ### <a name='env'></a>.env
 
-Please find these settings in ~/.env
+Please find these settings in ~/.env:
 
 ```
 vi ~/.env 
@@ -153,7 +153,7 @@ LDAP_SEARCH_FILTER=(&(sAMAccountName={{username}})(memberOf=CN=our-chat-users,OU
 LDAP_FULL_NAME=displayName
 ```
 
-They should be pretty self explanatory, for example `LDAP_LOGIN_USES_USERNAME` means that you can login with your username instead of typing your entire email address. The LDAP_SEARCH_FILTER is a bit of a crutch, that we use to restrict LibreChat to members of an AD/LDAP security group. The filter was not intended for authorization and if a new user is not member of that group, they will get a 401 error (AuthN) instead of 403 (AuthZ). This can be a bit confusing. On some LDAP systems the LDAP_BIND_DN can be the email address (aka service principal) of the service accout, e.g. `myserviceaccount@domain.edu` but it is safest to use the DN (distinguished name).
+These settings should be pretty self-explanatory. For example, `LDAP_LOGIN_USES_USERNAME` means that you can log in with your username instead of typing your entire email address. The LDAP_SEARCH_FILTER is a bit of a workaround that we use to restrict LibreChat to members of an AD/LDAP security group. The filter was not intended for authorization, and if a new user is not a member of that group, they will get a 401 error (AuthN) instead of 403 (AuthZ). This can be a bit confusing. On some LDAP systems, the LDAP_BIND_DN can be the email address (aka service principal) of the service account, e.g., `myserviceaccount@domain.edu`, but it is safest to use the DN (distinguished name).
 
 
 After you have configured all these 7 settings, please use the LDAP test script `~/our-chat/tests/ldap-test.py <testuser>` to verify these settings. To check the LDAP_SEARCH_FILTER, you have to pass the username of a test user who is member of that security group (e.g. our-chat-users)
@@ -246,9 +246,13 @@ Now try to access your chat system, e.g. `https://ourchat.domain.edu`. If you en
 
 ## <a name='Budgeting'></a>Budgeting 
 
-Since LibreChat does not support cost control at this time, we need to rely on AWS. The service `AWS Budgets` is a good start but we realize quickly, that this product is for alerting only and does actually not stop services from being used, if there is a budget overrun. Now, AWS will point out that there is another service called `AWS Budget Actions` but it seems, those are mainly triggering `AWS Lambda` scripts. They also lack the flexibilty we need, and that raises the question, why we are not just running an hourly Lambda script to check where we are with our spend. 
-Let's assume, our monthly budget is $1000 (and not a penny more). If we disable the service after $950 has been spent, this may happen at the first day of the month and then nobody will be able to use the system for the rest of the month. We could also set the budget to $32 per day and with max 31 days in a month we would never exceed $992 / month. But that would mean people cannot really do big things and we want to support innovation. We do not want someone to be constrained by the $32 per day if only $100 has been spent this month. So let's see, if we can accumulate the budget. For example, if the system has not been used for 3 days, we would set the budget of the 4th day to $128 (`$32*4`). If someone came and used that entire amount on the 4th day, we would start fresh on the 5th day, and the budget would be $32 per day again. In an extreme case, assume the system has not been used for the first 30 days in a month. Then someone could come along and use $960 (`$32*30`) on the 31st day and we would still be within budget. 
-How should this be implemented ? Please see https://github.com/dirkpetersen/our-chat/issues/1
+Since LibreChat does not support cost control at this time, we need to rely on AWS. The service `AWS Budgets` is a good start, but we quickly realize that this product is for alerting only and does not actually stop services from being used if there is a budget overrun. AWS will point out that there is another service called `AWS Budget Actions`, but it seems those are mainly triggering `AWS Lambda` scripts. They also lack the flexibility we need, which raises the question: why not just run an hourly Lambda script to check our spend?
+
+Let's assume our monthly budget is $1000 (and not a penny more). If we disable the service after $950 has been spent, this may happen on the first day of the month, and then nobody will be able to use the system for the rest of the month. We could also set the budget to $32 per day, and with a maximum of 31 days in a month, we would never exceed $992 / month. But that would mean people cannot really do big things, and we want to support innovation. We do not want someone to be constrained by the $32 per day if only $100 has been spent this month.
+
+So let's see if we can accumulate the budget. For example, if the system has not been used for 3 days, we would set the budget of the 4th day to $128 (`$32*4`). If someone came and used that entire amount on the 4th day, we would start fresh on the 5th day, and the budget would be $32 per day again. In an extreme case, assume the system has not been used for the first 30 days in a month. Then someone could come along and use $960 (`$32*30`) on the 31st day, and we would still be within budget.
+
+How should this be implemented? Please see https://github.com/dirkpetersen/our-chat/issues/1 for further discussion.
 
 ## <a name='APIusage'></a>API usage 
 
