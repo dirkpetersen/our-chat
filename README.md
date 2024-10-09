@@ -305,6 +305,11 @@ The install procedures at https://github.com/dirkpetersen/our-chat also serve as
 
 While following the install procedures do not edit any of the 3 files but restore them from your secure location and copy them into your LibreChat installation.
 
+```
+cp ~/.env ~/LibreChat/
+cp ~/librechat.yaml ~/LibreChat/
+cp ~/nginx.conf ~/LibreChat/client/
+```
 
 ## <a name='On-premisesusecases'></a>On-premises use cases
 
