@@ -164,6 +164,7 @@ if [[ -f ${CUSTOM_CFG_PATH}/nginx.conf ]]; then
   mkdir -p ${LIBRECHAT_PATH}/client/ssl
   cp ${CUSTOM_CFG_PATH}/*.pem ${LIBRECHAT_PATH}/client/ssl
   cp ${CUSTOM_CFG_PATH}/*.pw ${LIBRECHAT_PATH}/client/ssl
+  chmod 600 {LIBRECHAT_PATH}/client/ssl/*.pw
   
   if ! curl -f https://ssl-config.mozilla.org/ffdhe2048.txt -o ${LIBRECHAT_PATH}/client/ssl/dhparam; then 
     openssl dhparam -out ${LIBRECHAT_PATH}/client/ssl/dhparam 2048
