@@ -291,9 +291,9 @@ mv ~/LibreChat ~/LibreChat.fail.1
 ~/our-chat/install-librechat.sh
 ```
 
-## <a name='DisasterRecoveryBusinessContinuity'></a>Disaster Recovery / Business Continuity
+## <a name='DisasterRecoveryBusinessContinuity'></a>Disaster Recovery / Business Continuity / Emergency Operation
 
-As the system only stores data temporarily, disaster recovery and business continuity procedures are limited to storing 3 configuraton files in a secure place: 
+As the system only stores data temporarily, disaster recovery and business continuity procedures are limited to backing up 3 configuraton files in a secure place: 
 
 ```
 ~/.env
