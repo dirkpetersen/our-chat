@@ -33,6 +33,8 @@ Table of Contents:
 * [Budgeting](#Budgeting)
 * [API usage](#APIusage)
 * [Purging of old chats](#Purgingofoldchats)
+* [Updating Librechat](#UpdatingLibrechat)
+* [Disaster Recovery / Business Continuity](#DisasterRecoveryBusinessContinuity)
 * [On-premises use cases](#On-premisesusecases)
 * [Longer term vision](#Longertermvision)
 * [Troubleshooting](#Troubleshooting)
@@ -135,7 +137,7 @@ chmod 600 ~/our-chat.*
 
 ## <a name='LibreChatConfiguration'></a>LibreChat Configuration
 
-You will likely need to edit each of these config files at some point, but for now you should only edit the `~/.env` file to enable LDAP authentication and to update a few security tokens.
+You will likely need to edit each of these config files at some point, but for now you should only edit the `~/.env` file to enable LDAP authentication and to update a few security tokens. If you are in a [Disaster Recovery / Business Continuity](#DisasterRecoveryBusinessContinuity) sitution, please do not edit the 3 files below but restore them from your secure location.
 
 ### <a name='env'></a>.env
 
@@ -260,7 +262,49 @@ LibreChat does not support API access (there is the RAG API feature, but that is
 
 ## <a name='Purgingofoldchats'></a>Purging of old chats
 
-Especially in healthcare environments we want to make sure that sensitive data does not reside on systems any longer than necessary. As of October 2024 LibreChat does not have the ability to purge data, however OurChat by default has a [purge script](https://github.com/dirkpetersen/our-chat/blob/main/purge_old_messages.py) activated, that deletes any messages and files older than X days. (30 days by default)
+Especially in healthcare environments we want to make sure that sensitive data does not reside on systems any longer than necessary. As of October 2024 LibreChat does not have the ability to purge data, however OurChat by default has a [purge script](https://github.com/dirkpetersen/our-chat/blob/main/purge_old_messages.py) activated, that deletes any messages and files older than X days. (60 days by default)
+
+## <a name='UpdatingLibrechat'></a>Updating Librechat
+
+Update Librechat top the latest version and check the console output:
+
+```
+cd ~/LibreChat
+docker compose -f ./deploy-compose-ourchat.yml down
+git pull 
+docker compose -f ./deploy-compose-ourchat.yml pull
+docker compose -f ./deploy-compose-ourchat.yml up
+```
+
+if everything works, we start LibreChat in Daemon mode: 
+
+```
+docker compose -f ~/LibreChat/deploy-compose-ourchat.yml down
+docker compose -f ~/LibreChat/deploy-compose-ourchat.yml up -d
+```
+
+should an upgrade fail, please follow these steps (Note: The chat history and uploaded files of all users will be lost)
+
+```
+docker compose -f ~/LibreChat/deploy-compose-ourchat.yml down
+mv ~/LibreChat ~/LibreChat.fail.1
+~/our-chat/install-librechat.sh
+```
+
+## <a name='DisasterRecoveryBusinessContinuity'></a>Disaster Recovery / Business Continuity
+
+As the system only stores data temporarily, disaster recovery and business continuity procedures are limited to storing 3 configuraton files in a secure place: 
+
+```
+~/.env
+~/librechat.yaml
+~/nginx.conf
+```
+
+The install procedures at https://github.com/dirkpetersen/our-chat also serve as disaster recovery process as they are enabling you to restore service in less than 30 minutes, once you have the prerequisites met. (You may decide to have  another VM already running to reduce the provisioning time).
+
+While following the install procedures do not edit any of the 3 files but restore them from your secure location and copy them into your LibreChat installation.
+
 
 ## <a name='On-premisesusecases'></a>On-premises use cases
 
