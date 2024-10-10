@@ -52,6 +52,7 @@ aws_creds() {
   echo "export AWS_ACCESS_KEY_ID=$(aws configure get aws_access_key_id)" > ~/.awsrc
   echo "export AWS_SECRET_ACCESS_KEY=$(aws configure get aws_secret_access_key)" >> ~/.awsrc
   echo "export AWS_DEFAULT_REGION=$(aws configure get region)" >> ~/.awsrc
+  chmod 600 ~/.awsrc
   if ! grep -Fxq "source ~/.awsrc" ~/.bashrc; then
     echo "source ~/.awsrc" >> ~/.bashrc
     echo "~/.awsrc has been added to .bashrc"

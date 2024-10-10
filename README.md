@@ -92,6 +92,15 @@ export AWS_SECRET_ACCESS_KEY=abcdefghijklmnopqrstuvwxyz123456
 export AWS_DEFAULT_REGION=us-west-2
 ```
 
+if you have those credentials already saved at another computer, you can just paste in these 4 commands over there. The 3 export statements above will be generated, and you can paste them here. You can change the AWS_PROFILE environment variable to something else if you are working with a different AWS profile, e.g such as `bedrock`
+
+```
+export AWS_PROFILE="default"
+echo -e "\nexport AWS_ACCESS_KEY_ID=$(aws configure get aws_access_key_id)"
+echo -e "export AWS_SECRET_ACCESS_KEY=$(aws configure get aws_secret_access_key)"
+echo -e "export AWS_DEFAULT_REGION=$(aws configure get region)"
+```
+
 Then test the connectivity to AWS Bedrock by running:
 
 ```
