@@ -7,15 +7,9 @@
 
 CUSTOM_CFG_PATH=${HOME}
 LIBRECHAT_PATH=${HOME}/LibreChat
-DEPLOY_COMPOSE=deploy-compose-ourchat.yml
+DEPLOY_COMPOSE=deploy-compose-ourchat-dev.yml
 CLONEDIR=$(dirname ${LIBRECHAT_PATH})
 SERVICE_NAME="librechat-backend.service"
-
-# Check if the service file already exists
-if [[ -f ${SERVICE_PATH} ]]; then
-  echo "Service file ${SERVICE_PATH} already exists."
-  exit 1
-fi
 
 # Create the systemd service file
 create_service_file() {
@@ -165,7 +159,7 @@ if [[ -f ${CUSTOM_CFG_PATH}/nginx.conf ]]; then
   mkdir -p ${LIBRECHAT_PATH}/client/ssl
   cp ${CUSTOM_CFG_PATH}/*.pem ${LIBRECHAT_PATH}/client/ssl
   cp ${CUSTOM_CFG_PATH}/*.pw ${LIBRECHAT_PATH}/client/ssl
-  chmod 600 {LIBRECHAT_PATH}/client/ssl/*.pw
+  chmod 600 ${LIBRECHAT_PATH}/client/ssl/*.pw
   
   if ! curl -f https://ssl-config.mozilla.org/ffdhe2048.txt -o ${LIBRECHAT_PATH}/client/ssl/dhparam; then 
     openssl dhparam -out ${LIBRECHAT_PATH}/client/ssl/dhparam 2048
