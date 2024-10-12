@@ -1,12 +1,12 @@
 #!/bin/bash
 
-# Run this to install docker packages and configure the `ochat`` user 
+# Run this to install dependencies, docker packages and configure the `ochat`` user 
 
 # Constants
 DOCKER_ROOT_URL="https://download.docker.com/linux"
 DOCKER_PACKAGES="docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin"
 DOCKER_GROUP_NAME="docker"
-OS_PACKAGES="git unzip python3-pip python3-boto3 python3-pymongo python3-ldap3"
+OS_PACKAGES="git unzip ca-certificates gnupg certbot python3-pip python3-boto3 python3-pymongo python3-ldap3"
 NEWUSER="ochat"
 SHELL_BIN="/bin/bash"
 
@@ -35,7 +35,7 @@ install_os_packages() {
 install_docker() {
 
   if [[ -f /usr/bin/docker ]]; then
-    echo "Docker is already installed, please remove docker from this machine before this script can install docker-ce: dnf remove -y docker"
+    echo "Docker is already installed, please remove docker from this machine before this script can install docker-ce from docker.com"
     return 1
   fi
 
@@ -43,7 +43,6 @@ install_docker() {
 
     echo "Step 1: Add Docker repository"
 
-    sudo apt install -y ca-certificates gnupg lsb-release
     # Add Docker’s official GPG key
     sudo mkdir -p /etc/apt/keyrings
     curl -fsSL ${DOCKER_ROOT_URL}/ubuntu/gpg | sudo gpg --dearmor -o /etc/apt/keyrings/docker.gpg
@@ -66,7 +65,7 @@ install_docker() {
       echo "Docker repository already exists."
     fi
     echo "Step 2: Install Docker packages"
-    sudo dnf install -y ${DOCKER_PACKAGES} --repo ${DOCKER_REPO_FILE}
+    sudo dnf install -y --skip-broken ${DOCKER_PACKAGES} --repo ${DOCKER_REPO_FILE}
   fi
 
   echo "Step 3: Start and enable Docker service"
