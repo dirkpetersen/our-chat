@@ -6,15 +6,30 @@
 DOCKER_REPO_URL="https://download.docker.com/linux/rhel/docker-ce.repo"
 DOCKER_REPO_FILE=~/docker-ce.repo
 DOCKER_PACKAGES="docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin"
-RHEL_PACKAGES="git python3-pip python3-boto3 python3-pymongo python3-ldap3"
+DOCKER_GROUP_NAME="docker"
+OS_PACKAGES="git python3-pip python3-boto3 python3-pymongo python3-ldap3 moin mc"
 NEWUSER="ochat"
 SHELL_BIN="/bin/bash"
 
-install_packages() {
+install_os_packages() {
   echo "Update the package database and install packages: "
-  sudo dnf update -y
-  sudo dnf install -y --skip-broken ${RHEL_PACKAGES}
-  #sudo apt-get install package1 package2 package3 --ignore-missing || true
+  if command -v apt-get >/dev/null 2>&1; then
+    export DEBIAN_FRONTEND=noninteractive
+    sudo apt update -y    
+    # Initial installation attempt (can also use --no-install-recommends here)
+    sudo apt install -y ${OS_PACKAGES} || {
+      # Retry missing packages individually if the initial attempt fails
+      for package in ${OS_PACKAGES}; do
+        if ! dpkg -s "$package" >/dev/null 2>&1; then
+          echo "Retrying installation of missing package: $package"
+          sudo apt install -y --no-install-recommends "$package" || echo "Failed to install $package"
+        fi
+      done
+    }
+  elif command -v dnf >/dev/null 2>&1; then
+    sudo dnf update -y
+    sudo dnf install -y --skip-broken ${OS_PACKAGES}
+  fi
 }
 
 # Function to install Docker
@@ -25,15 +40,34 @@ install_docker() {
     return 1
   fi
 
-  echo "Step 1: Add Docker repository"
-  if [[ ! -f ${DOCKER_REPO_FILE} ]]; then
-    sudo curl -fsSL ${DOCKER_REPO_URL} -o ${DOCKER_REPO_FILE}
-  else
-    echo "Docker repository already exists."
-  fi
+  if command -v apt-get >/dev/null 2>&1; then
 
-  echo "Step 2: Install Docker packages"
-  sudo dnf install -y ${DOCKER_PACKAGES} --repo ${DOCKER_REPO_FILE}
+    echo "Step 1: Add Docker repository"
+    
+    sudo apt install -y ca-certificates gnupg lsb-release
+    # Add Docker’s official GPG key
+    sudo mkdir -p /etc/apt/keyrings
+    curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo gpg --dearmor -o /etc/apt/keyrings/docker.gpg
+    # Set up the Docker repository
+    echo \
+      "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker.gpg] https://download.docker.com/linux/ubuntu \
+      $(lsb_release -cs) stable" | sudo tee /etc/apt/sources.list.d/docker.list > /dev/null
+
+    # Install Docker Engine, CLI, and containerd
+    echo "Step 2: Install Docker packages"
+    sudo apt update -y
+    sudo apt install -y ${DOCKER_PACKAGES}
+    
+  elif command -v dnf >/dev/null 2>&1; then
+    echo "Step 1: Add Docker repository"
+    if [[ ! -f ${DOCKER_REPO_FILE} ]]; then
+      sudo curl -fsSL ${DOCKER_REPO_URL} -o ${DOCKER_REPO_FILE}
+    else
+      echo "Docker repository already exists."
+    fi
+    echo "Step 2: Install Docker packages"
+    sudo dnf install -y ${DOCKER_PACKAGES} --repo ${DOCKER_REPO_FILE}
+  fi
 
   echo "Step 3: Start and enable Docker service"
   sudo systemctl start docker
@@ -43,8 +77,8 @@ install_docker() {
   sudo docker --version
 
   echo "Step 5: Check on Docker group"
-  if ! [[ $(getent group docker) ]]; then
-    echo -e "\n**** WARNING: Group '${GROUP_NAME}' does not exist!!"
+  if ! [[ $(getent group ${DOCKER_GROUP_NAME}) ]]; then
+    echo -e "\n**** WARNING: Group '${DOCKER_GROUP_NAME}' does not exist!!"
     echo -e "**** Check troubleshooting section ********* \n"
   fi  
 }
@@ -74,7 +108,7 @@ create_or_modify_user() {
 
 # Main function to execute all steps
 function main {
-  install_rhel_packages
+  install_os_packages
   install_docker
   create_or_modify_user
 }
