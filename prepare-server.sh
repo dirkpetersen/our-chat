@@ -3,11 +3,10 @@
 # Run this to install docker packages and configure the `ochat`` user 
 
 # Constants
-DOCKER_REPO_URL="https://download.docker.com/linux/rhel/docker-ce.repo"
-DOCKER_REPO_FILE=~/docker-ce.repo
+DOCKER_ROOT_URL="https://download.docker.com/linux"
 DOCKER_PACKAGES="docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin"
 DOCKER_GROUP_NAME="docker"
-OS_PACKAGES="git python3-pip python3-boto3 python3-pymongo python3-ldap3 moin mc"
+OS_PACKAGES="git unzip python3-pip python3-boto3 python3-pymongo python3-ldap3"
 NEWUSER="ochat"
 SHELL_BIN="/bin/bash"
 
@@ -43,14 +42,14 @@ install_docker() {
   if command -v apt-get >/dev/null 2>&1; then
 
     echo "Step 1: Add Docker repository"
-    
+
     sudo apt install -y ca-certificates gnupg lsb-release
     # Add Docker’s official GPG key
     sudo mkdir -p /etc/apt/keyrings
-    curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo gpg --dearmor -o /etc/apt/keyrings/docker.gpg
+    curl -fsSL ${DOCKER_ROOT_URL}/ubuntu/gpg | sudo gpg --dearmor -o /etc/apt/keyrings/docker.gpg
     # Set up the Docker repository
     echo \
-      "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker.gpg] https://download.docker.com/linux/ubuntu \
+      "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker.gpg] ${DOCKER_ROOT_URL}/ubuntu \
       $(lsb_release -cs) stable" | sudo tee /etc/apt/sources.list.d/docker.list > /dev/null
 
     # Install Docker Engine, CLI, and containerd
@@ -60,8 +59,9 @@ install_docker() {
     
   elif command -v dnf >/dev/null 2>&1; then
     echo "Step 1: Add Docker repository"
+    DOCKER_REPO_FILE=~/docker-ce.repo
     if [[ ! -f ${DOCKER_REPO_FILE} ]]; then
-      sudo curl -fsSL ${DOCKER_REPO_URL} -o ${DOCKER_REPO_FILE}
+      sudo curl -fsSL ${DOCKER_ROOT_URL}/rhel/docker-ce.repo -o ${DOCKER_REPO_FILE}
     else
       echo "Docker repository already exists."
     fi

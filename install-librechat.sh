@@ -42,10 +42,15 @@ setup_user_service() {
 }
 
 aws_creds() {
+
+  if ! command -v aws >/dev/null 2>&1; then
+   curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip" && unzip awscliv2.zip \
+      && ./aws/install -i ~/.local/share/aws-cli -b ~/.local/bin && rm -rf awscliv2.zip aws
+  fi
   # Retrieve static credentials
-  echo "export AWS_ACCESS_KEY_ID=$(aws configure get aws_access_key_id)" > ~/.awsrc
-  echo "export AWS_SECRET_ACCESS_KEY=$(aws configure get aws_secret_access_key)" >> ~/.awsrc
-  echo "export AWS_DEFAULT_REGION=$(aws configure get region)" >> ~/.awsrc
+  echo "export AWS_ACCESS_KEY_ID=$(~/.local/bin/aws configure get aws_access_key_id)" > ~/.awsrc
+  echo "export AWS_SECRET_ACCESS_KEY=$(~/.local/bin/aws configure get aws_secret_access_key)" >> ~/.awsrc
+  echo "export AWS_DEFAULT_REGION=$(~/.local/bin/aws configure get region)" >> ~/.awsrc
   chmod 600 ~/.awsrc
   if ! grep -Fxq "source ~/.awsrc" ~/.bashrc; then
     echo "source ~/.awsrc" >> ~/.bashrc
