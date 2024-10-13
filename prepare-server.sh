@@ -57,30 +57,43 @@ install_docker() {
     sudo apt install -y ${DOCKER_PACKAGES}
     
   elif command -v dnf >/dev/null 2>&1; then
-    echo "Step 1: Add Docker repository"
-    #DOCKER_REPO_FILE=/home/ec2-user/docker-ce.repo
-    sudo dnf config-manager --add-repo ${DOCKER_ROOT_URL}/rhel/docker-ce.repo
-    # if [[ ! -f ${DOCKER_REPO_FILE} ]]; then
-    #   curl -fsSL ${DOCKER_ROOT_URL}/rhel/docker-ce.repo -o ${DOCKER_REPO_FILE}
-    # else
-    #   echo "Docker repository already exists."
-    # fi
-    echo "Step 2: Install Docker packages"
-    sudo dnf install -y --skip-broken ${DOCKER_PACKAGES} # --repo ${DOCKER_REPO_FILE}
-  fi
 
-  echo "Step 3: Start and enable Docker service"
-  sudo systemctl start docker
-  sudo systemctl enable docker
+    if [[ -f /etc/system-release ]] && grep -q Amazon /etc/system-release; then
+      echo "Amazon Linux detected, special Docker installation"
+      echo "Step 1: Add Docker repository (skipped)"      
+      echo "Step 2: Install Docker packages"
+      sudo dnf install -y docker
+      # Install Docker Compose plugin
+      COMPOSE_VERSION=$(curl -s https://api.github.com/repos/docker/compose/releases/latest | grep 'tag_name' | cut -d\" -f4)
+      DOCKER_CONFIG=${DOCKER_CONFIG:-$HOME/.docker}
+      mkdir -p $DOCKER_CONFIG/cli-plugins
+      sudo curl -SL "https://github.com/docker/compose/releases/download/${COMPOSE_VERSION}/docker-compose-$(uname -s)-$(uname -m)" -o $DOCKER_CONFIG/cli-plugins/docker-compose
+      sudo chmod +x $DOCKER_CONFIG/cli-plugins/docker-compose      
+    else
+      echo "Step 1: Add Docker repository"
+      #DOCKER_REPO_FILE=/home/ec2-user/docker-ce.repo
+      sudo dnf config-manager --add-repo ${DOCKER_ROOT_URL}/rhel/docker-ce.repo
+      # if [[ ! -f ${DOCKER_REPO_FILE} ]]; then
+      #   curl -fsSL ${DOCKER_ROOT_URL}/rhel/docker-ce.repo -o ${DOCKER_REPO_FILE}
+      # else
+      #   echo "Docker repository already exists."
+      # fi
+      echo "Step 2: Install Docker packages"
+      sudo dnf install -y --skip-broken ${DOCKER_PACKAGES} # --repo ${DOCKER_REPO_FILE}
+    fi
 
-  echo "Step 4: Verify Docker installation"
-  sudo docker --version
+    echo "Step 3: Start and enable Docker service"
+    sudo systemctl start docker
+    sudo systemctl enable docker
 
-  echo "Step 5: Check on Docker group"
-  if ! [[ $(getent group ${DOCKER_GROUP_NAME}) ]]; then
-    echo -e "\n**** WARNING: Group '${DOCKER_GROUP_NAME}' does not exist!!"
-    echo -e "**** Check troubleshooting section ********* \n"
-  fi  
+    echo "Step 4: Verify Docker installation"
+    sudo docker --version
+
+    echo "Step 5: Check on Docker group"
+    if ! [[ $(getent group ${DOCKER_GROUP_NAME}) ]]; then
+      echo -e "\n**** WARNING: Group '${DOCKER_GROUP_NAME}' does not exist!!"
+      echo -e "**** Check troubleshooting section ********* \n"
+    fi  
 }
 
 # Function to create or modify the user
