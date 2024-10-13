@@ -44,7 +44,7 @@ setup_user_service() {
 aws_creds() {
 
   if ! command -v aws >/dev/null 2>&1; then
-   curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip" && unzip awscliv2.zip \
+    curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip" && unzip awscliv2.zip \
       && ./aws/install -i ~/.local/share/aws-cli -b ~/.local/bin && rm -rf awscliv2.zip aws
   fi
   # Retrieve static credentials

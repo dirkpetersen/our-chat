@@ -26,7 +26,7 @@ install_os_packages() {
       done
     }
   elif command -v dnf >/dev/null 2>&1; then
-    sudo dnf update -y
+    # sudo dnf update -y
     sudo dnf install -y --skip-broken ${OS_PACKAGES}
   fi
 }
@@ -58,9 +58,9 @@ install_docker() {
     
   elif command -v dnf >/dev/null 2>&1; then
     echo "Step 1: Add Docker repository"
-    DOCKER_REPO_FILE=~/docker-ce.repo
+    DOCKER_REPO_FILE=/home/ec2-user/docker-ce.repo
     if [[ ! -f ${DOCKER_REPO_FILE} ]]; then
-      sudo curl -fsSL ${DOCKER_ROOT_URL}/rhel/docker-ce.repo -o ${DOCKER_REPO_FILE}
+      curl -fsSL ${DOCKER_ROOT_URL}/rhel/docker-ce.repo -o ${DOCKER_REPO_FILE}
     else
       echo "Docker repository already exists."
     fi
