@@ -20,28 +20,29 @@ Other big benefits:
 Table of Contents:
 
 <!-- vscode-markdown-toc -->
-* [Prerequisites](#Prerequisites)
-* [Prepare Server](#PrepareServer)
-* [Prepare install](#Prepareinstall)
-* [AWS connectivity](#AWSconnectivity)
-* [SSL certificates](#SSLcertificates)
-* [LibreChat Configuration](#LibreChatConfiguration)
-	* [.env](#env)
-	* [librechat.yml (optional)](#librechat.ymloptional)
-	* [nginx.conf (optional)](#nginx.confoptional)
-* [Install LibreChat](#InstallLibreChat)
-* [Budgeting](#Budgeting)
-* [API usage](#APIusage)
-* [Purging of old chats](#Purgingofoldchats)
-* [Updating Librechat](#UpdatingLibrechat)
-* [Disaster Recovery / Business Continuity](#DisasterRecoveryBusinessContinuity)
-* [On-premises use cases](#On-premisesusecases)
-* [Longer term vision](#Longertermvision)
-* [Troubleshooting](#Troubleshooting)
-	* [Get debug output](#Getdebugoutput)
-	* [cannot create docker group](#cannotcreatedockergroup)
-	* [I don't have root permissions](#Idonthaverootpermissions)
-	* [Cleaning up docker](#Cleaningupdocker)
+- [Our Chat !](#our-chat-)
+	- [Prerequisites](#prerequisites)
+	- [Prepare Server](#prepare-server)
+	- [Prepare install](#prepare-install)
+	- [AWS connectivity](#aws-connectivity)
+	- [SSL certificates](#ssl-certificates)
+	- [LibreChat Configuration](#librechat-configuration)
+		- [.env](#env)
+		- [librechat.yml (optional)](#librechatyml-optional)
+		- [nginx.conf (optional)](#nginxconf-optional)
+	- [Install LibreChat](#install-librechat)
+	- [Budgeting](#budgeting)
+	- [API usage](#api-usage)
+	- [Purging of old chats](#purging-of-old-chats)
+	- [Updating Librechat](#updating-librechat)
+	- [Disaster Recovery / Business Continuity / Emergency Operation](#disaster-recovery--business-continuity--emergency-operation)
+	- [On-premises use cases](#on-premises-use-cases)
+	- [Longer term vision](#longer-term-vision)
+	- [Troubleshooting](#troubleshooting)
+		- [Get debug output](#get-debug-output)
+		- [cannot create docker group](#cannot-create-docker-group)
+		- [I don't have root permissions](#i-dont-have-root-permissions)
+		- [Cleaning up docker](#cleaning-up-docker)
 
 <!-- vscode-markdown-toc-config
 	numbering=false
@@ -215,11 +216,15 @@ The only change `vi ~/nginx.conf && cp ~/nginx.conf ~/LibreChat/client/nginx.con
 
 ## <a name='InstallLibreChat'></a>Install LibreChat
 
-When all the prep work is done correctly, you should be able to run `install-librechat.sh` and have a running system in a few seconds:
+When all the prep work is done correctly, you should be able to run `install-librechat.sh` and 
 
 ```
 ~/our-chat/install-librechat.sh
+```
 
+have a running system in a few seconds:
+
+```
 Cloning into 'LibreChat'...
 remote: Enumerating objects: 33792, done.
 remote: Counting objects: 100% (5880/5880), done.

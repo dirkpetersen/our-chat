@@ -62,13 +62,9 @@ install_docker() {
       echo "Amazon Linux detected, special Docker installation"
       echo "Step 1: Add Docker repository (skipped)"      
       echo "Step 2: Install Docker packages"
-      sudo dnf install -y docker
-      # Install Docker Compose plugin
-      COMPOSE_VERSION=$(curl -s https://api.github.com/repos/docker/compose/releases/latest | grep 'tag_name' | cut -d\" -f4)
-      DOCKER_CONFIG=${DOCKER_CONFIG:-$HOME/.docker}
-      mkdir -p $DOCKER_CONFIG/cli-plugins
-      sudo curl -SL "https://github.com/docker/compose/releases/download/${COMPOSE_VERSION}/docker-compose-$(uname -s)-$(uname -m)" -o $DOCKER_CONFIG/cli-plugins/docker-compose
-      sudo chmod +x $DOCKER_CONFIG/cli-plugins/docker-compose      
+      sudo dnf install -y docker crontabs
+      # optionally install Docker Compose plugin
+      # install_docker_compose_plugin
     else
       echo "Step 1: Add Docker repository"
       #DOCKER_REPO_FILE=/home/ec2-user/docker-ce.repo
@@ -97,6 +93,15 @@ install_docker() {
   else
     echo "Unsupported OS, please install Docker manually."
   fi
+}
+
+install_docker_compose_plugin() {
+  echo "Installing Docker Compose plugin..."
+  COMPOSE_VERSION=$(curl -s https://api.github.com/repos/docker/compose/releases/latest | grep 'tag_name' | cut -d\" -f4)
+  DOCKER_CONFIG=${DOCKER_CONFIG:-$HOME/.docker}
+  mkdir -p $DOCKER_CONFIG/cli-plugins
+  sudo curl -SL "https://github.com/docker/compose/releases/download/${COMPOSE_VERSION}/docker-compose-$(uname -s)-$(uname -m)" -o $DOCKER_CONFIG/cli-plugins/docker-compose
+  sudo chmod +x $DOCKER_CONFIG/cli-plugins/docker-compose
 }
 
 # Function to create or modify the user
