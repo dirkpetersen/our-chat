@@ -93,7 +93,10 @@ install_docker() {
     if ! [[ $(getent group ${DOCKER_GROUP_NAME}) ]]; then
       echo -e "\n**** WARNING: Group '${DOCKER_GROUP_NAME}' does not exist!!"
       echo -e "**** Check troubleshooting section ********* \n"
-    fi  
+    fi
+  else
+    echo "Unsupported OS, please install Docker manually."
+  fi
 }
 
 # Function to create or modify the user
