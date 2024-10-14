@@ -128,7 +128,7 @@ create_or_modify_user() {
 
 write_options_ssl_nginx() {
   local file_path="/etc/letsencrypt/options-ssl-nginx.conf"
-  sudo cat << EOF > ${file_path}
+  cat << EOF | sudo tee ${file_path} > /dev/null
 # SSL configuration options provided by Certbot
 ssl_session_cache shared:le_nginx_SSL:1m; # Caches SSL session parameters to speed up future connections
 ssl_session_timeout 1440m; # Defines the duration for which the SSL session cache is valid
