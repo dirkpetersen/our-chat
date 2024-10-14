@@ -143,12 +143,12 @@ generate_le_ssl_certificate() {
 function main {
   install_os_packages
   install_docker  
-  # if [[ -n ${1} ]]; then
-  #   mydomain=${1}
-  #   generate_le_ssl_certificate $mydomain
-  # else
-  read -t 60 -p "Enter hostname (FQDN) of this server (60 sec timeout): " mydomain < /dev/tty
-  # fi
+  if [[ -n ${1} ]]; then
+    mydomain=${1}    
+  else
+    echo "Enter the full hostname (FQDN) of this server to generate a Let's Encrypt SSL certificate"
+    read -t 60 -p "or hit just 'Enter' to skip SSL certs (60 sec timeout): " mydomain < /dev/tty
+  fi
   if [[ -n ${mydomain} ]]; then
     generate_le_ssl_certificate $mydomain
     echo "$mydomain" > /tmp/librechat-domain.txt
