@@ -223,10 +223,11 @@ if [[ -f ${CUSTOM_CFG_PATH}/nginx.conf ]]; then
   echo "Copying ${CUSTOM_CFG_PATH}/nginx.conf to ${LIBRECHAT_PATH}/client/nginx.conf"
   cp  ${CUSTOM_CFG_PATH}/nginx.conf ${LIBRECHAT_PATH}/client/nginx.conf
   mkdir -p ${LIBRECHAT_PATH}/client/ssl
-  cp ${CUSTOM_CFG_PATH}/*.pem ${LIBRECHAT_PATH}/client/ssl
-  cp ${CUSTOM_CFG_PATH}/*.pw ${LIBRECHAT_PATH}/client/ssl
-  chmod 600 ${LIBRECHAT_PATH}/client/ssl/*.pw
-  
+  if [[ -f ${CUSTOM_CFG_PATH}/our-chat.pem ]]; then
+    cp ${CUSTOM_CFG_PATH}/our-chat.pem ${LIBRECHAT_PATH}/client/ssl
+    cp ${CUSTOM_CFG_PATH}/our-chat.pw ${LIBRECHAT_PATH}/client/ssl
+    chmod 600 ${LIBRECHAT_PATH}/client/ssl/*.pw
+  fi
   if ! curl -f https://ssl-config.mozilla.org/ffdhe2048.txt -o ${LIBRECHAT_PATH}/client/ssl/dhparam; then 
     openssl dhparam -out ${LIBRECHAT_PATH}/client/ssl/dhparam 2048
   fi 
