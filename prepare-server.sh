@@ -126,6 +126,32 @@ create_or_modify_user() {
   echo -e "\nEnter: sudo su - ${NEWUSER}"
 }
 
+write_options_ssl_nginx() {
+  local file_path="/etc/letsencrypt/options-ssl-nginx.conf"
+  cat << EOF > ${file_path}
+# SSL configuration options provided by Certbot
+ssl_session_cache shared:le_nginx_SSL:1m; # Caches SSL session parameters to speed up future connections
+ssl_session_timeout 1440m; # Defines the duration for which the SSL session cache is valid
+
+ssl_protocols TLSv1.2 TLSv1.3; # Specifies the protocols supported (avoiding outdated versions)
+ssl_prefer_server_ciphers on; # Prioritizes server-defined cipher suites over client preferences
+
+# List of strong SSL ciphers
+ssl_ciphers "ECDHE-ECDSA-AES128-GCM-SHA256:ECDHE-RSA-AES128-GCM-SHA256:ECDHE-ECDSA-AES256-GCM-SHA384:ECDHE-RSA-AES256-GCM-SHA384:DHE-RSA-AES128-GCM-SHA256:DHE-RSA-AES256-GCM-SHA384";
+
+# Ensures that client requests are denied if they lack SNI
+ssl_ecdh_curve secp384r1; # Defines the elliptic curve for Diffie-Hellman key exchange
+
+# Strong Diffie-Hellman parameter, typically at /etc/letsencrypt/ssl-dhparams.pem
+ssl_dhparam /etc/letsencrypt/ssl-dhparams.pem;
+
+ssl_session_tickets off; # Disables session tickets for added security
+ssl_stapling on; # Enables OCSP stapling for faster certificate validation
+ssl_stapling_verify on; # Verifies the OCSP response for added security
+EOF
+}
+
+
 # Define function to obtain, secure, and store SSL certificates
 generate_le_ssl_certificate() {
   local fqdn=${1}
@@ -137,6 +163,12 @@ generate_le_ssl_certificate() {
     --agree-tos \
     --standalone \
     --domain "${fqdn}"
+
+  # Some manual fixes for nginx
+  if ! curl -f https://ssl-config.mozilla.org/ffdhe2048.txt -o /etc/letsencrypt/ssl-dhparams.pem; then 
+    openssl dhparam -out /etc/letsencrypt/ssl-dhparams.pem 2048
+  fi 
+  write_options_ssl_nginx
 }
 
 # Main function to execute all steps

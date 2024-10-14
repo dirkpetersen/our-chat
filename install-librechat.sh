@@ -112,9 +112,9 @@ activate_certbot_certs() {
   -e '/ssl_certificate_key \/etc\/librechat\/ssl\/our-chat.pem;/ s/^/# /' \
   -e '/ssl_password_file \/etc\/librechat\/ssl\/our-chat.pw;/ s/^/# /' \
   -e "/ssl_password_file \/etc\/librechat\/ssl\/our-chat.pw;/a\\
-    ssl_certificate /etc/letsencrypt/live/${FQDN}/fullchain.pem; # managed by Certbot\\
-    ssl_certificate_key /etc/letsencrypt/live/${FQDN}/privkey.pem; # managed by Certbot\\
-    include /etc/letsencrypt/options-ssl-nginx.conf; # managed by Certbot" \
+    ssl_certificate /etc/letsencrypt/live/${FQDN}/fullchain.pem;\\
+    ssl_certificate_key /etc/letsencrypt/live/${FQDN}/privkey.pem;\\
+    include /etc/letsencrypt/options-ssl-nginx.conf; \
   "${NGINX_CONF}"
 
   echo "nginx.conf has been updated with the new SSL configuration."
@@ -122,7 +122,7 @@ activate_certbot_certs() {
   # Add the /etc/letsencrypt line in deploy-compose file
   sed -i "/- \.\/client\/nginx\.conf:\/etc\/nginx\/conf\.d\/default\.conf/a \\
   - /etc/letsencrypt:/etc/letsencrypt" \
-  "${DEPLOY_COMPOSE}"
+  "${LIBRECHAT_PATH}/${DEPLOY_COMPOSE}"
   echo "${DEPLOY_COMPOSE} has been updated to include /etc/letsencrypt."
 }
 
