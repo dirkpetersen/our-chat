@@ -7,7 +7,7 @@
 
 CUSTOM_CFG_PATH=${HOME}
 LIBRECHAT_PATH=${HOME}/LibreChat
-DEPLOY_COMPOSE=deploy-compose-ourchat-dev.yml
+DEPLOY_COMPOSE=deploy-compose-ourchat.yml
 CLONEDIR=$(dirname ${LIBRECHAT_PATH})
 SERVICE_NAME="librechat-backend.service"
 
@@ -88,6 +88,44 @@ install_docker_compose_plugin() {
   chmod +x $DOCKER_CONFIG/cli-plugins/docker-compose
 }
 
+# Function to activate Certbot certificates
+activate_certbot_certs() {
+  local DOMAIN_FILE="/tmp/librechat-domain.txt"
+  local NGINX_CONF=${CUSTOM_CFG_PATH}/nginx.conf
+
+  # Check if the domain file exists
+  if ! [[ -f ${DOMAIN_FILE} ]]; then
+    echo "${DOMAIN_FILE} does not exist. Skipping certbot SSL activation."
+    return 1
+  fi
+  if ! [[ -d /etc/letsencrypt ]]; then
+    echo "/etc/letsencrypt does not exist. Skipping certbot SSL activation."
+    return 1
+  fi
+
+  # Read the FQDN from the file
+  FQDN=$(<${DOMAIN_FILE})
+
+  # Edit nginx.conf to comment out the old SSL lines and add new ones
+  sed -i \
+  -e '/ssl_certificate \/etc\/librechat\/ssl\/our-chat.pem;/ s/^/# /' \
+  -e '/ssl_certificate_key \/etc\/librechat\/ssl\/our-chat.pem;/ s/^/# /' \
+  -e '/ssl_password_file \/etc\/librechat\/ssl\/our-chat.pw;/ s/^/# /' \
+  -e "/ssl_password_file \/etc\/librechat\/ssl\/our-chat.pw;/a\\
+    ssl_certificate /etc/letsencrypt/live/${FQDN}/fullchain.pem; # managed by Certbot\\
+    ssl_certificate_key /etc/letsencrypt/live/${FQDN}/privkey.pem; # managed by Certbot\\
+    include /etc/letsencrypt/options-ssl-nginx.conf; # managed by Certbot" \
+  "${NGINX_CONF}"
+
+  echo "nginx.conf has been updated with the new SSL configuration."
+
+  # Add the /etc/letsencrypt line in deploy-compose file
+  sed -i "/- \.\/client\/nginx\.conf:\/etc\/nginx\/conf\.d\/default\.conf/a \\
+  - /etc/letsencrypt:/etc/letsencrypt" \
+  "${DEPLOY_COMPOSE}"
+  echo "${DEPLOY_COMPOSE} has been updated to include /etc/letsencrypt."
+}
+
 ######### Main Script ###################################################
 
 if ! docker compose version &> /dev/null; then
@@ -144,7 +182,9 @@ else
   #sed -i 's/librechat-rag-api-dev-lite:latest/librechat-rag-api-dev:latest/g' "${LIBRECHAT_PATH}/${DEPLOY_COMPOSE}"
 
   # if not using librechat nginx make sure we can use the system nginx by using different ports
-  if ! [[ -f ${CUSTOM_CFG_PATH}/nginx.conf ]]; then 
+  if [[ -f ${CUSTOM_CFG_PATH}/nginx.conf ]]; then 
+    activate_certbot_certs
+  else
     sed -i '/ports:/,/^[^ ]/ s/- 80:80/- 2080:80/; /ports:/,/^[^ ]/ s/- 443:443/- 2443:443/' \
               ${LIBRECHAT_PATH}/${DEPLOY_COMPOSE}
   fi
