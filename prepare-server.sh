@@ -27,6 +27,11 @@ install_os_packages() {
     }
   elif command -v dnf >/dev/null 2>&1; then
     sudo dnf check-update --refresh
+    if [[ -f /etc/system-release ]] && grep -q Amazon /etc/system-release; then
+      echo "Amazon Linux detected, no epel-release available"
+    else
+      sudo dnf install -y epel-release
+    fi    
     sudo dnf install -y --skip-broken ${OS_PACKAGES}
   fi
 }
