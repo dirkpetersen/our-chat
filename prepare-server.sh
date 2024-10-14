@@ -6,7 +6,7 @@
 DOCKER_ROOT_URL="https://download.docker.com/linux"
 DOCKER_PACKAGES="docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin"
 DOCKER_GROUP_NAME="docker"
-OS_PACKAGES="git unzip ca-certificates gnupg certbot python3-pip python3-boto3 python3-pymongo python3-ldap3"
+OS_PACKAGES="vim git unzip ca-certificates gnupg certbot python3-certbot-nginx python3-pip python3-boto3 python3-pymongo python3-ldap3"
 NEWUSER="ochat"
 SHELL_BIN="/bin/bash"
 
@@ -126,12 +126,34 @@ create_or_modify_user() {
   echo -e "\nEnter: sudo su - ${NEWUSER}"
 }
 
+# Define function to obtain, secure, and store SSL certificates
+generate_le_ssl_certificate() {
+  local fqdn=${1}
+
+  # Run certbot to obtain certificate
+  # run --standalone or --nginx or 'certbot certonly'
+  sudo certbot \
+    --register-unsafely-without-email \
+    --agree-tos \
+    --nginx \
+    --domain "${fqdn}"
+}
 
 # Main function to execute all steps
 function main {
   install_os_packages
   install_docker
   create_or_modify_user
+  if [[ -n ${1} ]]; then
+    mydomain=${1}
+    generate_le_ssl_certificate $mydomain
+  else
+    read -t 60 -p "Enter hostname (FQDN) of this server (60 sec timeout): " mydomain
+    generate_le_ssl_certificate $mydomain
+  fi
+  if [[ -n ${mydomain} ]]; then
+    echo "$mydomain" > /tmp/librechat-domain.txt
+  fi
 }
 
 # Execute the main function
