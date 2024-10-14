@@ -144,14 +144,14 @@ function main {
   install_os_packages
   install_docker
   create_or_modify_user
-  if [[ -n ${1} ]]; then
-    mydomain=${1}
-    generate_le_ssl_certificate $mydomain
-  else
-    read -t 60 -p "Enter hostname (FQDN) of this server (60 sec timeout): " mydomain
-    generate_le_ssl_certificate $mydomain
-  fi
+  # if [[ -n ${1} ]]; then
+  #   mydomain=${1}
+  #   generate_le_ssl_certificate $mydomain
+  # else
+  read -t 60 -p "Enter hostname (FQDN) of this server (60 sec timeout): " mydomain
+  # fi
   if [[ -n ${mydomain} ]]; then
+    generate_le_ssl_certificate $mydomain
     echo "$mydomain" > /tmp/librechat-domain.txt
   fi
 }
