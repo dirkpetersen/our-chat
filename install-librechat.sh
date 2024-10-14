@@ -121,7 +121,7 @@ activate_certbot_certs() {
 
   # Add the /etc/letsencrypt line in deploy-compose file
   sed -i "/- \.\/client\/nginx\.conf:\/etc\/nginx\/conf\.d\/default\.conf/a \\
-  - /etc/letsencrypt:/etc/letsencrypt" \
+      - /etc/letsencrypt:/etc/letsencrypt" \
   "${LIBRECHAT_PATH}/${DEPLOY_COMPOSE}"
   echo "${DEPLOY_COMPOSE} has been updated to include /etc/letsencrypt."
 }

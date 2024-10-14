@@ -164,7 +164,8 @@ function main {
     echo ""
     echo "Enter the full hostname (FQDN) of this server to generate a Let's Encrypt SSL certificate"
     echo "NOTE: For this to work, this server must be reachable on port 80 from the internet."
-    read -t 60 -p "Please hit just 'Enter' to skip creating Let's Encrypt SSL certs (60 sec timeout): " mydomain < /dev/tty
+    echo "Please hit just 'Enter' to skip creating Let's Encrypt SSL certs (60 sec timeout)"
+    read -t 60 -p "Enter FQDN: " mydomain < /dev/tty
   fi
   if [[ -n ${mydomain} ]]; then
     generate_le_ssl_certificate $mydomain
