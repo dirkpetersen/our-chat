@@ -44,6 +44,13 @@ setup_user_service() {
 aws_creds() {
 
   if ! command -v aws >/dev/null 2>&1; then
+    if [[ -f ~/.local/bin/aws ]]; then
+      echo "AWS CLI is already installed but not in PATH"
+      export PATH=~/.local/bin:$PATH
+      return 0
+    fi
+    echo "Installing AWS CLI v2..."
+    # Create a temporary directory
     tmpdir=$(mktemp -d -t awscli-XXX)
     # Download, unzip, and install AWS CLI v2 using full paths
     curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "$tmpdir/awscliv2.zip" \
