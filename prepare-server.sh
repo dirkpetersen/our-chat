@@ -128,7 +128,7 @@ create_or_modify_user() {
 
 write_options_ssl_nginx() {
   local file_path="/etc/letsencrypt/options-ssl-nginx.conf"
-  cat << EOF > ${file_path}
+  sudo cat << EOF > ${file_path}
 # SSL configuration options provided by Certbot
 ssl_session_cache shared:le_nginx_SSL:1m; # Caches SSL session parameters to speed up future connections
 ssl_session_timeout 1440m; # Defines the duration for which the SSL session cache is valid
@@ -165,8 +165,8 @@ generate_le_ssl_certificate() {
     --domain "${fqdn}"
 
   # Some manual fixes for nginx
-  if ! curl -f https://ssl-config.mozilla.org/ffdhe2048.txt -o /etc/letsencrypt/ssl-dhparams.pem; then 
-    openssl dhparam -out /etc/letsencrypt/ssl-dhparams.pem 2048
+  if ! sudo curl -f https://ssl-config.mozilla.org/ffdhe2048.txt -o /etc/letsencrypt/ssl-dhparams.pem; then 
+    sudo openssl dhparam -out /etc/letsencrypt/ssl-dhparams.pem 2048
   fi 
   write_options_ssl_nginx
 }
