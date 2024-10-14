@@ -142,12 +142,14 @@ generate_le_ssl_certificate() {
 # Main function to execute all steps
 function main {
   install_os_packages
-  install_docker  
+  install_docker
   if [[ -n ${1} ]]; then
-    mydomain=${1}    
+    mydomain=${1}
   else
+    echo ""
     echo "Enter the full hostname (FQDN) of this server to generate a Let's Encrypt SSL certificate"
-    read -t 60 -p "or hit just 'Enter' to skip SSL certs (60 sec timeout): " mydomain < /dev/tty
+    echo "NOTE: For this to work, this server must be reachable on port 80 from the internet."
+    read -t 60 -p "Please hit just 'Enter' to skip creating Let's Encrypt SSL certs (60 sec timeout): " mydomain < /dev/tty
   fi
   if [[ -n ${mydomain} ]]; then
     generate_le_ssl_certificate $mydomain
