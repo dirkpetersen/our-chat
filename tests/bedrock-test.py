@@ -82,7 +82,7 @@ body = json.dumps({
 try:
     response = bedrock.invoke_model(body=body, modelId=amodel)
     response_body = json.loads(response.get("body").read())    
-    print(f"\nResponse to 'Hello, world' with model {amodel}:",response_body.get("content")[0]['text'], flush=True)
+    print(f"\nResponse to 'Hello, world' with model {amodel}:\n",response_body.get("content")[0]['text'], flush=True)
 except ClientError as e:
     if e.response['Error']['Code'] == 'AccessDeniedException':
         print(f"Access denied for model: {amodel}")
