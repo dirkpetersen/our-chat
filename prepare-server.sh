@@ -202,6 +202,7 @@ function main {
   fi
   if [[ -n ${mydomain} ]]; then
     if is_port_open 80 $mydomain; then
+      echo "Port 80 is open on $mydomain. Proceeding to generate Let's Encrypt SSL certificate..."
       generate_le_ssl_certificate $mydomain
     else
       echo "Port 80 is not open on $mydomain. Please open port 80 to incoming internet traffic and try again."
