@@ -16,6 +16,7 @@ install_os_packages() {
     export DEBIAN_FRONTEND=noninteractive
     sudo apt update -y    
     # Initial installation attempt (can also use --no-install-recommends here)
+    OS_PACKAGES+=" netcat"
     sudo apt install -y ${OS_PACKAGES} || {
       # Retry missing packages individually if the initial attempt fails
       for package in ${OS_PACKAGES}; do
@@ -31,7 +32,8 @@ install_os_packages() {
       echo "Amazon Linux detected, no epel-release available"
     else
       sudo dnf install -y epel-release
-    fi    
+    fi
+    OS_PACKAGES+=" nmap-ncat"
     sudo dnf install -y --skip-broken ${OS_PACKAGES}
   fi
 }
@@ -164,7 +166,9 @@ is_port_open() {
   local hostname=${2:-$(get_public_ip)}
   local url="https://ports.yougetsignal.com/check-port.php"
 
+  sudo nc -l -p 80 &>/dev/null &
   local result=$(curl -s --data "remoteAddress=$hostname&portNumber=$port" "$url")
+  sudo pkill -f "nc -l -p 80"
 
   if [ -z "$result" ]; then
     echo "Error: No response from YouGetSignal" >&2
