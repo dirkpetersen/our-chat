@@ -51,9 +51,18 @@ aws_creds() {
       # Create a temporary directory
       tmpdir=$(mktemp -d -t awscli-XXX)
       # Download, unzip, and install AWS CLI v2 using full paths
-      curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "$tmpdir/awscliv2.zip" \
-        && unzip "$tmpdir/awscliv2.zip" -d "$tmpdir" \
-        && "$tmpdir/aws/install" -i ~/.local/share/aws-cli -b ~/.local/bin
+      arch=$(uname -m)
+      # Set the appropriate URL based on the architecture
+      if [[ "$arch" == "x86_64" ]]; then
+         cliurl="https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip"
+      elif [[ "$arch" == "aarch64" ]]; then
+         cliurl="https://awscli.amazonaws.com/awscli-exe-linux-aarch64.zip"
+      else
+        echo "Unsupported architecture: $arch. Please install AWS CLI v2 manually and restart the script."
+        exit 1
+      curl "${cliurl}" -o "${tmpdir}/awscliv2.zip" \
+        && unzip "${tmpdir}/awscliv2.zip" -d "${tmpdir}" \
+        && "${tmpdir}/aws/install" -i ~/.local/share/aws-cli -b ~/.local/bin
       # Clean up by removing the temporary directory
       rm -rf "$tmpdir"
     fi
