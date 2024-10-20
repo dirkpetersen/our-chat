@@ -60,6 +60,7 @@ aws_creds() {
       else
         echo "Unsupported architecture: $arch. Please install AWS CLI v2 manually and restart the script."
         exit 1
+      fi
       curl "${cliurl}" -o "${tmpdir}/awscliv2.zip" \
         && unzip "${tmpdir}/awscliv2.zip" -d "${tmpdir}" \
         && "${tmpdir}/aws/install" -i ~/.local/share/aws-cli -b ~/.local/bin
