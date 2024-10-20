@@ -190,6 +190,12 @@ is_port_open() {
 function main {
   install_os_packages
   install_docker
+  # Check if /tmp/librechat-domain.txt exists and read the domain from there
+  if [[ -f /tmp/librechat-domain.txt ]]; then
+    default_domain=$(cat /tmp/librechat-domain.txt)
+  else
+    default_domain=""
+  fi
   if [[ -n ${1} ]]; then
     mydomain=${1}
   else
@@ -198,7 +204,7 @@ function main {
     echo "NOTE: For this to work, this server must be reachable on port 80 (http) from the internet."
     echo "Otherwise you can skip this step and manually setup SSL certs from your IT team later."
     echo "Please hit just 'Enter' to skip creating Let's Encrypt SSL certs (5 min timeout)"
-    read -t 300 -p "Enter FQDN: " mydomain < /dev/tty
+    read -t 300 -e -i "$default_domain" -p "Enter FQDN: " mydomain < /dev/tty
   fi
   if [[ -n ${mydomain} ]]; then
     if is_port_open 80 $mydomain; then
