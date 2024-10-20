@@ -26,6 +26,8 @@ Table of Contents:
 	- [Prepare install](#prepare-install)
 	- [AWS connectivity](#aws-connectivity)
 	- [SSL certificates](#ssl-certificates)
+		- [receiving SSL certs from IT](#receiving-ssl-certs-from-it)
+		- [receiving SSL certs from Let's encrypt](#receiving-ssl-certs-from-lets-encrypt)
 	- [LibreChat Configuration](#librechat-configuration)
 		- [.env](#env)
 		- [librechat.yml (optional)](#librechatyml-optional)
@@ -85,21 +87,21 @@ cp ~/our-chat/nginx.conf ~/nginx.conf
 
 ## <a name='AWSconnectivity'></a>AWS connectivity
 
-Export the AWS credentials and region of the Bedrock service account (the one that has only the AmazonBedrockFullAccess policy attached) to environment variables:
-
-```
-export AWS_ACCESS_KEY_ID=abcdefghijklmnopqrstuvwxyz
-export AWS_SECRET_ACCESS_KEY=abcdefghijklmnopqrstuvwxyz123456
-export AWS_DEFAULT_REGION=us-west-2
-```
-
-if you have those credentials already saved at another computer, you can just paste in these 4 commands over there. The 3 export statements above will be generated, and you can paste them here. You can change the AWS_PROFILE environment variable to something else if you are working with a different AWS profile, e.g such as `bedrock`
+Export the AWS credentials and region of the Bedrock service account (the one that has only the AmazonBedrockFullAccess policy attached) to environment variables, go the terminal of another computer that has the right credentials configured and paste these 4 commands to the terminal to generate the export statements (You can change the AWS_PROFILE environment variable to something else if you are working with a different AWS profile, e.g such as `bedrock`):
 
 ```
 export AWS_PROFILE="default"
 echo -e "\nexport AWS_ACCESS_KEY_ID=$(aws configure get aws_access_key_id)"
 echo -e "export AWS_SECRET_ACCESS_KEY=$(aws configure get aws_secret_access_key)"
 echo -e "export AWS_DEFAULT_REGION=$(aws configure get region)"
+```
+
+then paste the 3 generated export statements to the computer that you are configuring now.
+
+```
+export AWS_ACCESS_KEY_ID=abcdefghijklmnopqrstuvwxyz
+export AWS_SECRET_ACCESS_KEY=abcdefghijklmnopqrstuvwxyz123456
+export AWS_DEFAULT_REGION=us-west-2
 ```
 
 Then test the connectivity to AWS Bedrock by running:
@@ -122,14 +124,17 @@ amazon.titan-embed-g1-text-02
 .
 mistral.mistral-large-2407-v1:0
 
-Response to 'Hello, world': Hello! How can I assist you today? Feel free to ask me anything or let me know if you need help with a specific topic.
+Response to 'Hello, world' with model anthropic.claude-3-5-sonnet-20240620-v1:0:
+ Hello! How can I assist you today? Feel free to ask me any questions or let me know if you need help with anything.
 ```
 
-If you don't get that response or the script shows an error, go back to your AWS Administrator for troubleshooting your AWS credentials or permissions before you continue.
+If you don't get that response or the script shows an error, go back to your AWS Administrator for troubleshooting your AWS credentials or permissions before you continue. (Note: For each AWS account access to some bedrock models must be specifically requested and a EULA needs to be accepted in the AWS Console)
 
 You can find more details about AWS in the AWS budget section below. 
 
 ## <a name='SSLcertificates'></a>SSL certificates 
+
+### receiving SSL certs from IT
 
 Here we cover the standard case of you receiving SSL certs from your enterprise team. In many cases your team will send you a PKCS12 archive which comes as a *.pfx file along with an import password. After entering the import password, you need to set a new PEM pass phrase. At the end of this process you should have `~/our-chat.pem` and `~/our-chat.pw` at the root of the ochat home directory. (Please note: If you **leave a space at the beginning** of the echo "your-pem-passphrase" line, the pass phrase will not end up in your bash history). 
 
@@ -145,30 +150,34 @@ chmod 600 ~/our-chat.*
 
 ```
 
+### receiving SSL certs from Let's encrypt 
+
+If your server is reachable from the internet on http standard port 80 you can use `Let's encrypt`. The install script will ask for a server hostname (FQDN) that you can enter.
+
 ## <a name='LibreChatConfiguration'></a>LibreChat Configuration
 
 You will likely need to edit each of these config files at some point, but for now you should only edit the `~/.env` file to enable LDAP authentication and to update a few security tokens. If you are in a [Disaster Recovery / Business Continuity](#DisasterRecoveryBusinessContinuity) sitution, please do not edit the 3 files below but restore them from your secure location.
 
 ### <a name='env'></a>.env
 
-Please find these settings in ~/.env:
+Please find these settings in ~/.env and enable them 
 
 ```
 vi ~/.env 
 
-LDAP_URL=ldaps://ldap.domain.edu:636
-LDAP_USER_SEARCH_BASE=OU=User Accounts,dc=domain,dc=edu
-LDAP_BIND_DN=CN=myserviceaccount,OU=Service Accounts,OU=User Accounts,DC=domain,DC=edu
-LDAP_BIND_CREDENTIALS="ad-password"
-LDAP_LOGIN_USES_USERNAME=true
-LDAP_SEARCH_FILTER=(&(sAMAccountName={{username}})(memberOf=CN=our-chat-users,OU=Groups,DC=domain,DC=edu))
-LDAP_FULL_NAME=displayName
+#LDAP_URL=ldaps://ldap.domain.edu:636
+#LDAP_USER_SEARCH_BASE=OU=User Accounts,dc=domain,dc=edu
+#LDAP_BIND_DN=CN=myserviceaccount,OU=Service Accounts,OU=User Accounts,DC=domain,DC=edu
+#LDAP_BIND_CREDENTIALS="ad-password"
+#LDAP_LOGIN_USES_USERNAME=true
+#LDAP_SEARCH_FILTER=(&(sAMAccountName={{username}})(memberOf=CN=our-chat-users,OU=Groups,DC=domain,DC=edu))
+#LDAP_FULL_NAME=displayName
 ```
 
-These settings should be pretty self-explanatory. For example, `LDAP_LOGIN_USES_USERNAME` means that you can log in with your username instead of typing your entire email address. The LDAP_SEARCH_FILTER is a bit of a workaround that we use to restrict LibreChat to members of an AD/LDAP security group. The filter was not intended for authorization, and if a new user is not a member of that group, they will get a 401 error (AuthN) instead of 403 (AuthZ). This can be a bit confusing. On some LDAP systems, the LDAP_BIND_DN can be the email address (aka service principal) of the service account, e.g., `myserviceaccount@domain.edu`, but it is safest to use the DN (distinguished name).
+The LDAP settings should be pretty self-explanatory. For example, `LDAP_LOGIN_USES_USERNAME` means that you can log in with your username instead of typing your entire email address. The LDAP_SEARCH_FILTER is a bit of a workaround that we use to restrict LibreChat to members of an AD/LDAP security group. The filter was not intended for authorization, and if a new user is not a member of that group, they will get a 401 error (AuthN) instead of 403 (AuthZ). This can be a bit confusing. On some LDAP systems, the LDAP_BIND_DN can be the email address (aka service principal) of the service account, e.g., `myserviceaccount@domain.edu`, but it is safest to use the DN (distinguished name).
 
 
-After you have configured all these 7 settings, please use the LDAP test script `~/our-chat/tests/ldap-test.py <testuser>` to verify these settings. To check the LDAP_SEARCH_FILTER, you have to pass the username of a test user who is member of that security group (e.g. our-chat-users)
+After you have configured all 7 settings, please use the LDAP test script `~/our-chat/tests/ldap-test.py <testuser>` to verify these settings. To check the LDAP_SEARCH_FILTER, you have to pass the username of a test user who is member of that security group (e.g. our-chat-users)
 
 ```
 ~/our-chat/tests/ldap-test.py peterdir
@@ -202,11 +211,11 @@ You can likely skip the next 2 config files for now, but might want to change th
 
 ### <a name='librechat.ymloptional'></a>librechat.yml (optional)
 
-For example, use `vi ~/librechat.yml && cp ~/librechat.yml ~/LibreChat/librechat.yml` to change the terms of service, modify the site footer and change a few advanced bedrock settings, for example allowed AWS regions. 
+For example, use `vi ~/librechat.yml && cp ~/librechat.yml ~/LibreChat/` to change the terms of service, modify the site footer and change a few advanced bedrock settings, for example allowed AWS regions. 
 
 ### <a name='nginx.confoptional'></a>nginx.conf (optional)
 
-The only change `vi ~/nginx.conf && cp ~/nginx.conf ~/LibreChat/client/nginx.conf` likely requires, is setting the filenames for the SSL certificates for https, if you choose a different cerificate name than our-chat.pem / our-chat.pw . You can set addional nginx headers to further enhance security.
+The only change `vi ~/nginx.conf && cp ~/nginx.conf ~/LibreChat/client/` likely requires, is setting the filenames for the SSL certificates for https, if you choose a different cerificate name than our-chat.pem / our-chat.pw . You can set addional nginx headers to further enhance security.
 
 ```
    ssl_certificate /etc/librechat/ssl/our-chat.pem;
@@ -403,7 +412,11 @@ If this is not working, please remove the docker packages using `dnf` and reinst
 If your IT infrastructure team cannot give you `root` access to the virtual server you requested, you may still be able to get access to management features via sudo. Ask your sysadmin to run `visudo` and paste in the config below. Change yourusername to your actual user name:
 
 ```
-yourusername (ALL) NOPASSWD: /usr/bin/dnf, /usr/bin/systemctl, /usr/bin/loginctl enable-linger *, /usr/bin/docker, /usr/sbin/useradd, /usr/sbin/usermod -aG docker *, /usr/sbin/reboot, /usr/bin/su - *, /usr/bin/certbot
+yourusername (ALL) NOPASSWD: /usr/bin/dnf, /usr/bin/systemctl, /usr/bin/loginctl enable-linger *, /usr/bin/docker, /usr/sbin/useradd, /usr/sbin/usermod -aG docker *, /usr/sbin/reboot, /usr/bin/su - *, 
+# these are needed on Ubuntu 
+yourusername (ALL) NOPASSWD: /usr/bin/apt, /usr/bin/gpg, /usr/bin/mkdir, /usr/bin/tee
+# these are needed if you use Let's encrypt certificates 
+yourusername (ALL) NOPASSWD: /usr/bin/certbot, /usr/bin/nc, /usr/bin/pkill
 yourusername (ALL) !/usr/bin/su -
 yourusername (ALL) !/usr/bin/su - root
 ```
