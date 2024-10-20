@@ -111,7 +111,10 @@ create_or_modify_user() {
     echo "User ${NEWUSER} already exists."
   else
     echo "Creating user ${NEWUSER}..."
-    sudo useradd -rm --shell ${SHELL_BIN} ${NEWUSER}
+    LARGEST_FS=$(df -l --output=target,avail | awk 'NR>1 {print $2,$1}' | sort -nr | head -n1 | awk '{print $2}')
+    LHOMEDIR="${LARGEST_FS}/home"
+    sudo mkdir -p $LHOMEDIR
+    sudo useradd -rm --shell ${SHELL_BIN} --home-dir "${LHOMEDIR}/${NEWUSER}" ${NEWUSER}
   fi
 
   echo "Enabling linger for ${NEWUSER}..."
