@@ -153,6 +153,35 @@ generate_le_ssl_certificate() {
   # write_options_ssl_nginx
 }
 
+# Function to get public IP
+get_public_ip() {
+    curl -s https://api.ipify.org
+}
+
+# Function to check if a port is open, returns 0 (true) if open, 1 (false) if closed
+is_port_open() {
+  local port=$1
+  local hostname=${2:-$(get_public_ip)}
+  local url="https://ports.yougetsignal.com/check-port.php"
+
+  local result=$(curl -s --data "remoteAddress=$hostname&portNumber=$port" "$url")
+
+  if [ -z "$result" ]; then
+    echo "Error: No response from YouGetSignal" >&2
+    return 2
+  fi
+
+  if echo "$result" | grep -q "flag_green.gif"; then
+    return 0  # Port is open
+  elif echo "$result" | grep -q "flag_red.gif"; then
+    return 1  # Port is closed
+  else
+    echo "Unable to determine the status of port $port on $hostname" >&2
+    echo "Raw response: $result" >&2
+    return 2  # Error
+  fi
+}
+
 # Main function to execute all steps
 function main {
   install_os_packages
@@ -168,7 +197,11 @@ function main {
     read -t 300 -p "Enter FQDN: " mydomain < /dev/tty
   fi
   if [[ -n ${mydomain} ]]; then
-    generate_le_ssl_certificate $mydomain
+    if is_port_open 80 $mydomain; then
+      generate_le_ssl_certificate $mydomain
+    else
+      echo "Port 80 is not open on $mydomain. Please open port 80 to incoming internet traffic and try again."
+    fi
     echo "$mydomain" > /tmp/librechat-domain.txt
   fi
   create_or_modify_user
