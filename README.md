@@ -403,7 +403,7 @@ If this is not working, please remove the docker packages using `dnf` and reinst
 If your IT infrastructure team cannot give you `root` access to the virtual server you requested, you may still be able to get access to management features via sudo. Ask your sysadmin to run `visudo` and paste in the config below. Change yourusername to your actual user name:
 
 ```
-yourusername (ALL) NOPASSWD: /usr/bin/dnf, /usr/bin/systemctl, /usr/bin/loginctl enable-linger *, /usr/bin/docker, /usr/sbin/useradd, /usr/sbin/userdel, /usr/sbin/usermod -aG docker *, /usr/sbin/reboot, /usr/bin/su - *
+yourusername (ALL) NOPASSWD: /usr/bin/dnf, /usr/bin/systemctl, /usr/bin/loginctl enable-linger *, /usr/bin/docker, /usr/sbin/useradd, /usr/sbin/usermod -aG docker *, /usr/sbin/reboot, /usr/bin/su - *, /usr/bin/certbot
 yourusername (ALL) !/usr/bin/su -
 yourusername (ALL) !/usr/bin/su - root
 ```

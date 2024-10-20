@@ -65,20 +65,14 @@ install_docker() {
 
     if [[ -f /etc/system-release ]] && grep -q Amazon /etc/system-release; then
       echo "Amazon Linux detected, special Docker installation"
-      echo "Step 1: Add Docker repository (skipped)"      
-      echo "Step 2: Install Docker packages"
+      echo "Step 1: Add Docker repository (skipped)"
+      echo "Step 2: Install Docker packages from standard repos"
       sudo dnf install -y docker crontabs
       # optionally install Docker Compose plugin
       # install_docker_compose_plugin
     else
       echo "Step 1: Add Docker repository"
-      #DOCKER_REPO_FILE=/home/ec2-user/docker-ce.repo
       sudo dnf config-manager --add-repo ${DOCKER_ROOT_URL}/rhel/docker-ce.repo
-      # if [[ ! -f ${DOCKER_REPO_FILE} ]]; then
-      #   curl -fsSL ${DOCKER_ROOT_URL}/rhel/docker-ce.repo -o ${DOCKER_REPO_FILE}
-      # else
-      #   echo "Docker repository already exists."
-      # fi
       echo "Step 2: Install Docker packages"
       sudo dnf install -y --skip-broken ${DOCKER_PACKAGES} # --repo ${DOCKER_REPO_FILE}
     fi
@@ -153,10 +147,10 @@ generate_le_ssl_certificate() {
     --domain "${fqdn}"
 
   # Some manual fixes for nginx
-  if ! sudo curl -f https://ssl-config.mozilla.org/ffdhe2048.txt -o /etc/letsencrypt/ssl-dhparams.pem; then 
-    sudo openssl dhparam -out /etc/letsencrypt/ssl-dhparams.pem 2048
-  fi 
-  write_options_ssl_nginx
+  # if ! sudo curl -f https://ssl-config.mozilla.org/ffdhe2048.txt -o /etc/letsencrypt/ssl-dhparams.pem; then 
+  #   sudo openssl dhparam -out /etc/letsencrypt/ssl-dhparams.pem 2048
+  # fi 
+  # write_options_ssl_nginx
 }
 
 # Main function to execute all steps
@@ -168,9 +162,10 @@ function main {
   else
     echo ""
     echo "Enter the full hostname (FQDN) of this server to generate a Let's Encrypt SSL certificate"
-    echo "NOTE: For this to work, this server must be reachable on port 80 from the internet."
-    echo "Please hit just 'Enter' to skip creating Let's Encrypt SSL certs (60 sec timeout)"
-    read -t 60 -p "Enter FQDN: " mydomain < /dev/tty
+    echo "NOTE: For this to work, this server must be reachable on port 80 (http) from the internet."
+    echo "Otherwise you can skip this step and manually setup SSL certs from your IT team later."
+    echo "Please hit just 'Enter' to skip creating Let's Encrypt SSL certs (5 min timeout)"
+    read -t 300 -p "Enter FQDN: " mydomain < /dev/tty
   fi
   if [[ -n ${mydomain} ]]; then
     generate_le_ssl_certificate $mydomain

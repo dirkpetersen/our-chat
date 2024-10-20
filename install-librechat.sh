@@ -46,18 +46,17 @@ aws_creds() {
   if ! command -v aws >/dev/null 2>&1; then
     if [[ -f ~/.local/bin/aws ]]; then
       echo "AWS CLI is already installed but not in PATH"
-      export PATH=~/.local/bin:$PATH
-      return 0
+    else  
+      echo "Installing AWS CLI v2..."
+      # Create a temporary directory
+      tmpdir=$(mktemp -d -t awscli-XXX)
+      # Download, unzip, and install AWS CLI v2 using full paths
+      curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "$tmpdir/awscliv2.zip" \
+        && unzip "$tmpdir/awscliv2.zip" -d "$tmpdir" \
+        && "$tmpdir/aws/install" -i ~/.local/share/aws-cli -b ~/.local/bin
+      # Clean up by removing the temporary directory
+      rm -rf "$tmpdir"
     fi
-    echo "Installing AWS CLI v2..."
-    # Create a temporary directory
-    tmpdir=$(mktemp -d -t awscli-XXX)
-    # Download, unzip, and install AWS CLI v2 using full paths
-    curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "$tmpdir/awscliv2.zip" \
-      && unzip "$tmpdir/awscliv2.zip" -d "$tmpdir" \
-      && "$tmpdir/aws/install" -i ~/.local/share/aws-cli -b ~/.local/bin
-     # Clean up by removing the temporary directory
-    rm -rf "$tmpdir"
     export PATH=~/.local/bin:$PATH
   fi
   # Retrieve static credentials
@@ -208,6 +207,7 @@ aws_creds
 if [[ -f ${CUSTOM_CFG_PATH}/.env ]]; then
   echo "Copying ${CUSTOM_CFG_PATH}/.env to ${LIBRECHAT_PATH}/.env and expanding env vars"
   envsubst < ${CUSTOM_CFG_PATH}/.env > ${LIBRECHAT_PATH}/.env
+  cp -f ${LIBRECHAT_PATH}/.env ${CUSTOM_CFG_PATH}/.env 
 else
   echo ".env.example to .env"
   cp  ${LIBRECHAT_PATH}/.env.example ${LIBRECHAT_PATH}/.env
