@@ -81,7 +81,15 @@ aws_creds() {
   source ~/.awsrc
 }
 
-purge_cron_job() {
+setup_cron_jobs() {
+  DCCMD="docker compose -f ${LIBRECHAT_PATH}/${DEPLOY_COMPOSE} up -d"
+  CRON_JOB="@reboot ${DCCMD} > ~/reboot.log 2>&1"
+  # Add the cron job for the current user
+  if ! crontab -l | grep -Fq "${DEPLOY_COMPOSE}"; then
+    ( crontab -l; echo "${CRON_JOB}" ) | crontab -
+    echo "Cron job added to run ${DCCMD} daily at reboot."
+  fi  
+
   # Determine the current script's directory
   SCRIPT_DIR=$(dirname "$(realpath "${BASH_SOURCE[0]}")")
   # Set the full path to the script to be run
@@ -257,7 +265,7 @@ if [[ -f ${CUSTOM_CFG_PATH}/docker-compose.override.yml ]]; then
   cp ${CUSTOM_CFG_PATH}/docker-compose.override.yml ${LIBRECHAT_PATH}
 fi
 
-purge_cron_job
+setup_cron_jobs
 
 docker compose -f ${LIBRECHAT_PATH}/${DEPLOY_COMPOSE} up -d
 
