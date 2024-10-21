@@ -87,7 +87,7 @@ setup_cron_jobs() {
   # Add the cron job for the current user
   if ! crontab -l | grep -Fq "${DEPLOY_COMPOSE}"; then
     ( crontab -l; echo "${CRON_JOB}" ) | crontab -
-    echo "Cron job added to run ${DCCMD} daily at reboot."
+    echo "Cron job added to run ${DCCMD} at reboot."
   fi  
 
   # Determine the current script's directory
