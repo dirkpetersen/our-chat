@@ -305,7 +305,7 @@ Now try to access your chat system, e.g. `https://ourchat.domain.edu`. If you en
 
 ## Manage and update LibreChat
 
-To stop and start LibreChat, switch to the ochat user and these commands:
+To stop and start LibreChat, switch to the ochat user and run these commands:
 
 ```
 docker compose -f ~/LibreChat/deploy-compose-ourchat.yml down
