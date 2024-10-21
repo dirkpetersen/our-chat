@@ -16,7 +16,7 @@ install_os_packages() {
     export DEBIAN_FRONTEND=noninteractive
     sudo apt update -y    
     # Initial installation attempt (can also use --no-install-recommends here)
-    OS_PACKAGES+=" netcat"
+    OS_PACKAGES+=" netcat-openbsd"
     sudo apt install -y ${OS_PACKAGES} || {
       # Retry missing packages individually if the initial attempt fails
       for package in ${OS_PACKAGES}; do
