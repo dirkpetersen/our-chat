@@ -82,7 +82,7 @@ aws_creds() {
 }
 
 setup_cron_jobs() {
-  DCCMD="docker compose -f ${LIBRECHAT_PATH}/${DEPLOY_COMPOSE} up -d"
+  DCCMD="/usr/bin/docker compose -f ${LIBRECHAT_PATH}/${DEPLOY_COMPOSE} up -d"
   CRON_JOB="@reboot ${DCCMD} > ~/reboot.log 2>&1"
   # Add the cron job for the current user
   if ! crontab -l | grep -Fq "${DEPLOY_COMPOSE}"; then
@@ -273,7 +273,8 @@ echo "stopping: docker compose -f ${LIBRECHAT_PATH}/${DEPLOY_COMPOSE} down"
 echo "starting: docker compose -f ${LIBRECHAT_PATH}/${DEPLOY_COMPOSE} up -d"
 
 if [[ -n ${FQDN} ]]; then
-  echo "Please connect to https://${FQDN}"
+  echo "If you run this command you should see '<title>LibreChat</title>':"
+  echo "curl -s https://${FQDN} | grep LibreChat"
 fi 
 
 if [[ -f ${CUSTOM_CFG_PATH}/${DEPLOY_COMPOSE} ]]; then
