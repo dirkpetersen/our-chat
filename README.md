@@ -35,13 +35,13 @@ Table of Contents:
 		- [librechat.yaml (optional)](#librechatyaml-optional)
 		- [nginx.conf (optional)](#nginxconf-optional)
 	- [Install LibreChat](#install-librechat)
-	- [Managing and upgrading](#managing-and-upgrading)
+	- [Managing and updating LibreChat](#managing-and-updating-librechat)
 	- [Budgeting](#budgeting)
 	- [API usage](#api-usage)
 	- [Purging of old chats](#purging-of-old-chats)
-	- [Updating Librechat](#updating-librechat)
 	- [Disaster Recovery / Business Continuity / Emergency Operation](#disaster-recovery--business-continuity--emergency-operation)
 	- [On-premises use cases](#on-premises-use-cases)
+	- [Missing Features](#missing-features)
 	- [Longer term vision](#longer-term-vision)
 	- [Troubleshooting](#troubleshooting)
 		- [Get debug output](#get-debug-output)
@@ -303,7 +303,7 @@ curl -s https://ourchat.domain.edu | grep LibreChat
 
 Now try to access your chat system, e.g. `https://ourchat.domain.edu`. If you encounter issues, please see the [troubleshooting](#troubleshooting) section below.
 
-## Managing and upgrading 
+## Managing and updating LibreChat
 
 To stop and start LibreChat, switch to the ochat user and these commands:
 
@@ -322,38 +322,7 @@ cd ~/LibreChat
 docker compose -f deploy-compose-ourchat.yml down
 git pull 
 docker compose -f deploy-compose-ourchat.yml pull
-docker compose -f deploy-compose-ourchat.yml up -d
-
-```
-
-## <a name='Budgeting'></a>Budgeting 
-
-Since LibreChat does not support cost control at this time, we need to rely on AWS. The service `AWS Budgets` is a good start, but we quickly realize that this product is for alerting only and does not actually stop services from being used if there is a budget overrun. AWS will point out that there is another service called `AWS Budget Actions`, but it seems those are mainly triggering `AWS Lambda` scripts. They also lack the flexibility we need, which raises the question: why not just run an hourly Lambda script to check our spend?
-
-Let's assume our monthly budget is $1000 (and not a penny more). If we disable the service after $950 has been spent, this may happen on the first day of the month, and then nobody will be able to use the system for the rest of the month. We could also set the budget to $32 per day, and with a maximum of 31 days in a month, we would never exceed $992 / month. But that would mean people cannot really do big things, and we want to support innovation. We do not want someone to be constrained by the $32 per day if only $100 has been spent this month.
-
-So let's see if we can accumulate the budget. For example, if the system has not been used for 3 days, we would set the budget of the 4th day to $128 (`$32*4`). If someone came and used that entire amount on the 4th day, we would start fresh on the 5th day, and the budget would be $32 per day again. In an extreme case, assume the system has not been used for the first 30 days in a month. Then someone could come along and use $960 (`$32*30`) on the 31st day, and we would still be within budget.
-
-How should this be implemented? Please see https://github.com/dirkpetersen/our-chat/issues/1 for further discussion.
-
-## <a name='APIusage'></a>API usage 
-
-LibreChat does not support API access (there is the RAG API feature, but that is a bit of a misnomer, as it actually requires the web ui). Instead, LibreChat is an aggregation point for many different APIs for users. Currently, LibreChat does not support complex cost control and all users of one server will access the same AWS account and there is only one single line item on the invoice and we cannot who was responsible for the cost. API users can automate their workflows which can lead to runaway costs. This means that API users should get their own AWS account with their own budget control and access the Bedrock API direcly. ~/our-chat/tests/bedrock-test.py may service as a resonable initial example that can list LLMs and ask a question.
-
-## <a name='Purgingofoldchats'></a>Purging of old chats
-
-Especially in healthcare environments we want to make sure that sensitive data does not reside on systems any longer than necessary. As of October 2024 LibreChat does not have the ability to purge data, however OurChat by default has a [purge script](https://github.com/dirkpetersen/our-chat/blob/main/purge_old_messages.py) activated, that deletes any messages and files older than X days. (60 days by default)
-
-## <a name='UpdatingLibrechat'></a>Updating Librechat
-
-Update Librechat top the latest version and check the console output:
-
-```
-cd ~/LibreChat
-docker compose -f ./deploy-compose-ourchat.yml down
-git pull 
-docker compose -f ./deploy-compose-ourchat.yml pull
-docker compose -f ./deploy-compose-ourchat.yml up
+docker compose -f deploy-compose-ourchat.yml up
 ```
 
 if everything works, we start LibreChat in Daemon mode: 
@@ -370,6 +339,25 @@ docker compose -f ~/LibreChat/deploy-compose-ourchat.yml down
 mv ~/LibreChat ~/LibreChat.fail.1
 ~/our-chat/install-librechat.sh
 ```
+
+## <a name='Budgeting'></a>Budgeting 
+
+Since LibreChat does not support cost control at this time, we need to rely on AWS. The service `AWS Budgets` is a good start, but we quickly realize that this product is for alerting only and does not actually stop services from being used, if there is a budget overrun. AWS will point out that there is another service called `AWS Budget Actions`, but it seems those are mainly triggering `AWS Lambda` scripts. They also lack the flexibility we need, which raises the question: why not just run an hourly Lambda script to check our spend?
+
+Let's assume our monthly budget is $1000 (and not a penny more). If we disable the service after $950 has been spent, this may happen on the first day of the month, and then nobody will be able to use the system for the rest of the month. We could also set the budget to $32 per day, and with a maximum of 31 days in a month, we would never exceed $992 / month. But that would mean people cannot really do big things, and we want to support innovation. We do not want someone to be constrained by the $32 per day if only $100 has been spent this month.
+
+So let's see if we can accumulate the budget. For example, if the system has not been used for 3 days, we would set the budget of the 4th day to $128 (`$32*4`). If someone came and used that entire amount on the 4th day, we would start fresh on the 5th day, and the budget would be $32 per day again. In an extreme case, assume the system has not been used for the first 30 days in a month. Then someone could come along and use $960 (`$32*30`) on the 31st day, and we would still be within budget.
+
+How should this be implemented? Please see https://github.com/dirkpetersen/our-chat/issues/1 for further discussion.
+
+## <a name='APIusage'></a>API usage 
+
+LibreChat does not support API access (there is the RAG API feature, but that is a bit of a misnomer, as it actually requires the web ui). Instead, LibreChat is an aggregation point for many different APIs for users. Currently, LibreChat does not support complex cost control and all users of one server will access the same AWS account and there is only one single line item on the invoice and we cannot who was responsible for the cost. API users can automate their workflows which can lead to runaway costs. This means that API users should get their own AWS account with their own budget control and access the Bedrock API direcly. ~/our-chat/tests/bedrock-test.py may service as a resonable initial example that can list LLMs and ask a question.
+
+## <a name='Purgingofoldchats'></a>Purging of old chats
+
+Especially in healthcare environments we want to make sure that sensitive data does not reside on systems any longer than necessary. As of October 2024 LibreChat does not have the ability to purge data, however OurChat by default has a [purge script](https://github.com/dirkpetersen/our-chat/blob/main/purge_old_messages.py) activated, that deletes any messages and files older than X days. (60 days by default)
+
 
 ## <a name='DisasterRecoveryBusinessContinuity'></a>Disaster Recovery / Business Continuity / Emergency Operation
 
@@ -399,6 +387,18 @@ cp ~/our-chat.pw ~/LibreChat/client/ssl/
 
 If you have use cases that are not permitted to use cloud services (e.g. patent issues), you can use on premises GPUs or even [connect to your HPC cluster](https://github.com/dirkpetersen/forever-slurm) and use those resources all within the same LibreChat interface. Configure these custom endpoints [in .env](https://github.com/dirkpetersen/our-chat/blob/main/.env.ochat#L57) and [in librechat.yaml](https://github.com/dirkpetersen/our-chat/blob/main/librechat.yaml#L74)
  
+
+## Missing Features 
+
+There are a few features we'd like to see in LibreChat in the future
+
+- more mature support for authorization through LDAP security groups: https://github.com/danny-avila/LibreChat/issues/3955
+- Track which LLM actually provided an answer: https://github.com/danny-avila/LibreChat/issues/4012
+- Better retention handling: https://github.com/danny-avila/LibreChat/issues/2365
+  
+
+
+
 ## <a name='Longertermvision'></a>Longer term vision 
 
 In the future we may extend our chat eco-system, and add apps with addional capabilities but at this time LibreChat seems to meet our needs. 
