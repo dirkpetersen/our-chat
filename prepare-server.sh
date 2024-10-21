@@ -45,7 +45,14 @@ install_docker() {
     echo "Docker is already installed, please remove docker from this machine before this script can install docker-ce from docker.com"
     return 1
   fi
-
+  DOCKER_ROOT="/var/lib/docker"
+  if [[ "${LARGEST_FS}" != "/" ]]; then
+    DOCKER_ROOT="${LARGEST_FS}/var/lib/docker"
+    sudo mkdir -p $DOCKER_ROOT
+    mkdir -p '/etc/docker'
+    echo -e "{\n \"data-root\": \"${DOCKER_ROOT}\"\n}" | sudo tee /etc/docker/daemon.json > /dev/null
+  fi
+  
   if command -v apt-get >/dev/null 2>&1; then
 
     echo "Step 1: Add Docker repository"
@@ -111,10 +118,13 @@ create_or_modify_user() {
     echo "User ${NEWUSER} already exists."
   else
     echo "Creating user ${NEWUSER}..."
-    LARGEST_FS=$(df -l --output=target,avail | awk 'NR>1 {print $2,$1}' | sort -nr | head -n1 | awk '{print $2}')
-    LHOMEDIR="${LARGEST_FS}/home"
-    sudo mkdir -p $LHOMEDIR
-    sudo useradd -rm --shell ${SHELL_BIN} --home-dir "${LHOMEDIR}/${NEWUSER}" ${NEWUSER}
+    if [[ "${LARGEST_FS}" != "/" ]]; then
+      LHOMEDIR="${LARGEST_FS}/home"
+      sudo mkdir -p $LHOMEDIR
+      sudo useradd -rm --shell ${SHELL_BIN} --home-dir "${LHOMEDIR}/${NEWUSER}" ${NEWUSER}
+    else
+      sudo useradd -rm --shell ${SHELL_BIN} ${NEWUSER}
+    fi
   fi
 
   echo "Enabling linger for ${NEWUSER}..."
@@ -191,6 +201,8 @@ is_port_open() {
 
 # Main function to execute all steps
 function main {
+  # get the file system with the most available space on this machine and install /home and /docker there
+  LARGEST_FS=$(df -l --output=target,avail | awk 'NR>1 {print $2,$1}' | sort -nr | head -n1 | awk '{print $2}')
   install_os_packages
   install_docker
   # Check if /tmp/librechat-domain.txt exists and read the domain from there
