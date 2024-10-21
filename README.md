@@ -6,6 +6,8 @@ Why is this needed? Can't users just access AWS Bedrock directly? They might; ho
 
 [LibreChat](https://www.librechat.ai/), on the other hand, takes zero on-boarding time; users simply login with their enterprise credentials and use the system just like ChatGPT or Claude.ai. Another reason to like LibreChat is its superior user interface. It has gained much popularity and is [often trending](https://trendshift.io/repositories/4685) on GitHub.
 
+You can bring up a LibreChat server in 5 minutes [once you have the prerequisites](#prerequisites).
+
 ![image](https://github.com/user-attachments/assets/85422848-7875-4c87-8f62-2582e8e07775)
 
 
@@ -56,12 +58,16 @@ Table of Contents:
 
 ## <a name='Prerequisites'></a>Prerequisites 
 
-- Get a RHEL virtual server (this process was tested with RHEL 9.4) with at least 8GB RAM and 50GB free disk space, of which about half should be under /home. As this server might process sensitive data, ask for all security software (log forwarder, Antivirus/malware, intrusion prevention) to be preinstalled.
-- This machine must be able to communicate with the `ldaps port 636` of your enterprise LDAP server (for example, Active Directory). 
+- A virtual server with at least 1GB RAM and 25GB free disk space and a current Linux OS installed.
+  - The install script will automatically pick the largest file system for install. If the largest file system is not mounted as `/` it will create /home and /var/lib/docker elsewhere, for example under /opt.
+  - The machine should have Amazon Linux (tested AL2023), RHEL (tested Rocky 9.4) or Ubuntu (tested 24.04 LTS) installed. 
+  - Note hat both ARM and X86 are supported. On AWS we recommend a Graviton/ARM instance (e.g. t4g.micro costs less than $6 per month)
+- As this server might process sensitive data, ask for all security software (log forwarder, Antivirus/malware, intrusion prevention) to be preinstalled.
+- If you use LDAP, this machine must be able to communicate with the `ldaps port 636` of your enterprise LDAP server (for example, Active Directory). 
 - An LDAP/AD security group that contains the users who are allowed to use the chat system. For now, we call this group `our-chat-users`.
-- An SSL certificate, unless you use Let's Encrypt.
+- An SSL certificate (often a PKCS12 archive by IT), unless your http port 80 can be reached from the internet, which allows you to use Let's Encrypt.
 - AWS credentials (AWS_ACCESS_KEY_ID, AWS_SECRET_ACCESS_KEY) for an AWS service account (perhaps called librechat or ochat) that has no permissions except for the AmazonBedrockFullAccess policy attached to it. 
-- You don't require root access if your sysadmins can run the `prepare-server.sh` script for you, but they should allow you to switch to the ochat user, e.g., `sudo su - ochat`.
+- You don't need root access to the virtual server if your IT team can run the `prepare-server.sh` script for you, but they should allow you to switch to the ochat user, e.g., `sudo su - ochat`. Alternatively, if you must run `prepare-server.sh` yourself, they can setup a [granular sudo config](#i-dont-have-root-permissions) for you. 
 
 ## <a name='PrepareServer'></a>Prepare Server 
 
@@ -132,6 +138,8 @@ If you don't get that response or the script shows an error, go back to your AWS
 
 You can find more details about AWS in the AWS budget section below. 
 
+If you do not require any further configuration, such as SSL certificates from IT or LDAP authentication you can now [start the LibreChat install](#install-librechat)
+
 ## <a name='SSLcertificates'></a>SSL certificates 
 
 ### receiving SSL certs from IT
@@ -152,7 +160,9 @@ chmod 600 ~/our-chat.*
 
 ### receiving SSL certs from Let's encrypt 
 
-If your server is reachable from the internet on http standard port 80 you can use `Let's encrypt`. The install script will ask for a server hostname (FQDN) that you can enter.
+If your server is reachable from the internet on http standard port 80, you can use `Let's encrypt`. The install script will ask for a server hostname (FQDN). Please enter it. 
+
+If you do not require any further configuration, such LDAP authentication you can now [start the LibreChat install](#install-librechat)
 
 ## <a name='LibreChatConfiguration'></a>LibreChat Configuration
 
@@ -421,7 +431,7 @@ If your IT infrastructure team cannot give you `root` access to the virtual serv
 
 ```
 yourusername (ALL) NOPASSWD: /usr/bin/dnf, /usr/bin/systemctl, /usr/bin/loginctl enable-linger *, /usr/bin/docker, /usr/sbin/useradd, /usr/sbin/usermod -aG docker *, /usr/sbin/reboot, /usr/bin/su - *, /usr/bin/mkdir, /usr/bin/tee
-# these are needed on Ubuntu 
+# in addition, these are needed on Ubuntu 
 yourusername (ALL) NOPASSWD: /usr/bin/apt, /usr/bin/gpg
 # these are needed if you use Let's encrypt certificates 
 yourusername (ALL) NOPASSWD: /usr/bin/certbot, /usr/bin/nc, /usr/bin/pkill

@@ -106,21 +106,17 @@ install_docker_compose_plugin() {
 
 # Function to activate Certbot certificates
 activate_certbot_certs() {
-  local DOMAIN_FILE="/tmp/librechat-domain.txt"
   local NGINX_CONF=${CUSTOM_CFG_PATH}/nginx.conf
 
   # Check if the domain file exists
-  if ! [[ -f ${DOMAIN_FILE} ]]; then
-    echo "${DOMAIN_FILE} does not exist. Skipping certbot SSL activation."
+  if [[ -z ${FQDN} ]]; then
+    echo "FQDN has not ben set. Skipping certbot SSL activation."
     return 1
   fi
   if ! [[ -d /etc/letsencrypt ]]; then
     echo "/etc/letsencrypt does not exist. Skipping certbot SSL activation."
     return 1
   fi
-
-  # Read the FQDN from the file
-  FQDN=$(<${DOMAIN_FILE})
 
   # Edit nginx.conf to comment out the old SSL lines and add new ones
   sed -i \
@@ -142,6 +138,12 @@ activate_certbot_certs() {
 }
 
 ######### Main Script ###################################################
+
+FQDN=""
+DOMAIN_FILE="/tmp/librechat-domain.txt"
+if [[ -f ${DOMAIN_FILE} ]]; then
+  FQDN=$(<${DOMAIN_FILE})
+fi
 
 if ! docker compose version &> /dev/null; then
   install_docker_compose_plugin
@@ -261,6 +263,10 @@ docker compose -f ${LIBRECHAT_PATH}/${DEPLOY_COMPOSE} up -d
 
 echo "stopping: docker compose -f ${LIBRECHAT_PATH}/${DEPLOY_COMPOSE} down"
 echo "starting: docker compose -f ${LIBRECHAT_PATH}/${DEPLOY_COMPOSE} up -d"
+
+if [[ -n ${FQDN} ]]; then
+  echo "Please connect to https://${FQDN}"
+fi 
 
 if [[ -f ${CUSTOM_CFG_PATH}/${DEPLOY_COMPOSE} ]]; then
   cd ${LIBRECHAT_PATH}
