@@ -373,7 +373,7 @@ cp ~/our-chat.pw ~/LibreChat/client/ssl/
 
 ## <a name='On-premisesusecases'></a>On-premises use cases
 
-If you have use cases that are not permitted to use cloud services (e.g. patent issues), you can use on premises GPUs or even [connect to your HPC cluster](https://github.com/dirkpetersen/forever-slurm) and use those resources all within the same LibreChat interface. Configure these custom endpoints [in .env](https://github.com/dirkpetersen/our-chat/blob/main/.env.ochat#L57) and [in librechat.yaml](https://github.com/dirkpetersen/our-chat/blob/main/librechat.yaml#L64)
+If you have use cases that are not permitted to use cloud services (e.g. patent issues), you can use on premises GPUs or even [connect to your HPC cluster](https://github.com/dirkpetersen/forever-slurm) and use those resources all within the same LibreChat interface. Configure these custom endpoints [in .env](https://github.com/dirkpetersen/our-chat/blob/main/.env.ochat#L57) and [in librechat.yaml](https://github.com/dirkpetersen/our-chat/blob/main/librechat.yaml#L74)
  
 ## <a name='Longertermvision'></a>Longer term vision 
 
