@@ -30,7 +30,7 @@ Table of Contents:
 		- [receiving SSL certs from Let's encrypt](#receiving-ssl-certs-from-lets-encrypt)
 	- [LibreChat Configuration](#librechat-configuration)
 		- [.env](#env)
-		- [librechat.yml (optional)](#librechatyml-optional)
+		- [librechat.yaml (optional)](#librechatyaml-optional)
 		- [nginx.conf (optional)](#nginxconf-optional)
 	- [Install LibreChat](#install-librechat)
 	- [Budgeting](#budgeting)
@@ -160,7 +160,7 @@ You will likely need to edit each of these config files at some point, but for n
 
 ### <a name='env'></a>.env
 
-Please find these settings in ~/.env and enable them 
+Please find these LDAP settings in ~/.env and enable them. If you decide to not use LDAP please review the `allowedDomains` setting in `librechat.yaml`
 
 ```
 vi ~/.env 
@@ -209,11 +209,19 @@ vi ~/.env
 
 You can likely skip the next 2 config files for now, but might want to change them later 
 
-### <a name='librechat.ymloptional'></a>librechat.yml (optional)
+### <a name='librechatyamloptional'></a>librechat.yaml (optional)
 
-For example, use `vi ~/librechat.yml && cp ~/librechat.yml ~/LibreChat/` to change the terms of service, modify the site footer and change a few advanced bedrock settings, for example allowed AWS regions. 
+For example, use `vi ~/librechat.yaml && cp ~/librechat.yaml ~/LibreChat/` to change the terms of service, modify the site footer and change a few advanced bedrock settings, for example allowed AWS regions. If you decide not to use LDAP authentication, you can enable self registration but I would recommended to limit this to certain domains (`allowedDomains`) to force users to use their institutional email address for signup. 
 
-### <a name='nginx.confoptional'></a>nginx.conf (optional)
+```
+registration:
+  socialLogins: ['github', 'google', 'discord', 'openid', 'facebook']
+  allowedDomains:
+   - "university1.edu"
+   - "university2.edu"
+```
+
+### <a name='nginxconfoptional'></a>nginx.conf (optional)
 
 The only change `vi ~/nginx.conf && cp ~/nginx.conf ~/LibreChat/client/` likely requires, is setting the filenames for the SSL certificates for https, if you choose a different cerificate name than our-chat.pem / our-chat.pw . You can set addional nginx headers to further enhance security.
 

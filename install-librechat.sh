@@ -129,8 +129,7 @@ activate_certbot_certs() {
   -e '/ssl_password_file \/etc\/librechat\/ssl\/our-chat.pw;/ s/^/# /' \
   -e "/ssl_password_file \/etc\/librechat\/ssl\/our-chat.pw;/a\\
     ssl_certificate /etc/letsencrypt/live/${FQDN}/fullchain.pem;\\
-    ssl_certificate_key /etc/letsencrypt/live/${FQDN}/privkey.pem;\\
-    include /etc/letsencrypt/options-ssl-nginx.conf;" \
+    ssl_certificate_key /etc/letsencrypt/live/${FQDN}/privkey.pem;" \
   "${NGINX_CONF}"
 
   echo "nginx.conf has been updated with the new SSL configuration."
