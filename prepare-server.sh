@@ -141,6 +141,7 @@ create_or_modify_user() {
 }
 
 write_options_ssl_nginx() {
+  # this is currently inactive
   local file_path="/etc/letsencrypt/options-ssl-nginx.conf"
   cat << EOF | sudo tee ${file_path} > /dev/null
 # SSL configuration options provided by Certbot
@@ -217,7 +218,7 @@ function main {
     echo ""
     echo "Enter the full hostname (FQDN) of this server to generate a Let's Encrypt SSL certificate"
     echo "NOTE: For this to work, this server must be reachable on port 80 (http) from the internet."
-    echo "Otherwise you can skip this step and manually setup SSL certs from your IT team later."
+    echo "You can also skip this step, and manually setup SSL certs from your IT team later."
     echo "Please hit just 'Enter' to skip creating Let's Encrypt SSL certs (5 min timeout)"
     read -t 300 -e -i "$default_domain" -p "Enter FQDN: " mydomain < /dev/tty
   fi

@@ -144,7 +144,7 @@ Response to 'Hello, world' with model anthropic.claude-3-5-sonnet-20240620-v1:0:
  Hello! How can I assist you today? Feel free to ask me any questions or let me know if you need help with anything.
 ```
 
-If you don't get that response or the script shows an error, go back to your AWS Administrator for troubleshooting your AWS credentials or permissions before you continue. (Note: To access some bedrock models you must specifically request authorization for each AWS account as you need to accpet an EULA)
+If you don't get that response or the script shows an error, go back to your AWS Administrator for troubleshooting your AWS credentials or permissions before you continue. (Note: To access some bedrock models you must specifically request authorization for each AWS account as you need to accept an EULA)
 
 You can find more details about AWS in the AWS budget section below. 
 
