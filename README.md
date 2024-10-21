@@ -35,7 +35,7 @@ Table of Contents:
 		- [librechat.yaml (optional)](#librechatyaml-optional)
 		- [nginx.conf (optional)](#nginxconf-optional)
 	- [Install LibreChat](#install-librechat)
-	- [Managing and updating LibreChat](#managing-and-updating-librechat)
+	- [Manage and update LibreChat](#manage-and-update-librechat)
 	- [Budgeting](#budgeting)
 	- [API usage](#api-usage)
 	- [Purging of old chats](#purging-of-old-chats)
@@ -303,7 +303,7 @@ curl -s https://ourchat.domain.edu | grep LibreChat
 
 Now try to access your chat system, e.g. `https://ourchat.domain.edu`. If you encounter issues, please see the [troubleshooting](#troubleshooting) section below.
 
-## Managing and updating LibreChat
+## Manage and update LibreChat
 
 To stop and start LibreChat, switch to the ochat user and these commands:
 
