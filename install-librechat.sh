@@ -118,7 +118,7 @@ activate_certbot_certs() {
 
   # Check if the domain file exists
   if [[ -z ${FQDN} ]]; then
-    echo "FQDN has not ben set. Skipping certbot SSL activation."
+    echo "FQDN has not been set. Skipping certbot SSL activation."
     return 1
   fi
   if ! [[ -d /etc/letsencrypt ]]; then
@@ -148,7 +148,7 @@ activate_certbot_certs() {
 ######### Main Script ###################################################
 
 FQDN=""
-DOMAIN_FILE="/tmp/librechat-domain.txt"
+DOMAIN_FILE="/var/tmp/librechat-domain.txt"
 if [[ -f ${DOMAIN_FILE} ]]; then
   FQDN=$(<${DOMAIN_FILE})
 fi
@@ -174,7 +174,9 @@ if [[ -d ${LIBRECHAT_PATH} ]]; then
   if [[ -n ${DOCK} ]]; then
     docker volume rm ${DOCK}
   fi
-  systemctl --user stop librechat-backend 
+  if [[ -f ${CUSTOM_CFG_PATH}/${DEPLOY_COMPOSE} ]]; then
+    systemctl --user stop librechat-backend 
+  fi  
   echo "${LIBRECHAT_PATH} already exists. Rename this folder and run again"
   cd "${CLONEDIR}"
   exit

@@ -205,9 +205,9 @@ function main {
   LARGEST_FS=$(df -l --output=target,avail | awk 'NR>1 {print $2,$1}' | sort -nr | head -n1 | awk '{print $2}')
   install_os_packages
   install_docker
-  # Check if /tmp/librechat-domain.txt exists and read the domain from there
-  if [[ -f /tmp/librechat-domain.txt ]]; then
-    default_domain=$(cat /tmp/librechat-domain.txt)
+  # Check if /var/tmp/librechat-domain.txt exists and read the domain from there
+  if [[ -f /var/tmp/librechat-domain.txt ]]; then
+    default_domain=$(cat /var/tmp/librechat-domain.txt)
   else
     default_domain=""
   fi
@@ -228,7 +228,7 @@ function main {
     else
       echo "Port 80 is not open on $mydomain. Please open port 80 to incoming internet traffic and try again."
     fi
-    echo "$mydomain" > /tmp/librechat-domain.txt
+    echo "$mydomain" > /var/tmp/librechat-domain.txt
   fi
   create_or_modify_user
 }
