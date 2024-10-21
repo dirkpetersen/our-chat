@@ -35,6 +35,7 @@ Table of Contents:
 		- [librechat.yaml (optional)](#librechatyaml-optional)
 		- [nginx.conf (optional)](#nginxconf-optional)
 	- [Install LibreChat](#install-librechat)
+	- [Managing and upgrading](#managing-and-upgrading)
 	- [Budgeting](#budgeting)
 	- [API usage](#api-usage)
 	- [Purging of old chats](#purging-of-old-chats)
@@ -72,6 +73,7 @@ Hard prerequisites
 Optional prerequisites
 
 - As this server might process sensitive data, ask for all security software (log forwarder, Antivirus/malware, intrusion prevention) to be preinstalled.
+- Consider an encrypted volume for addional security 
 - If you use LDAP, this machine must be able to communicate with the `ldaps port 636` of your enterprise LDAP server (for example, Active Directory). 
 - An LDAP/AD security group that contains the users, who are allowed to use the chat system. For now, we call this group `our-chat-users`.
 
@@ -301,6 +303,28 @@ curl -s https://ourchat.domain.edu | grep LibreChat
 
 Now try to access your chat system, e.g. `https://ourchat.domain.edu`. If you encounter issues, please see the [troubleshooting](#troubleshooting) section below.
 
+## Managing and upgrading 
+
+To stop and start LibreChat, switch to the ochat user and these commands:
+
+```
+docker compose -f ~/LibreChat/deploy-compose-ourchat.yml down
+```
+and
+```
+docker compose -f ~/LibreChat/deploy-compose-ourchat.yml up -d
+```
+
+To upgrade to the latest version, switch to the ochat user and enter these commands:
+
+```
+cd ~/LibreChat
+docker compose -f deploy-compose-ourchat.yml down
+git pull 
+docker compose -f deploy-compose-ourchat.yml pull
+docker compose -f deploy-compose-ourchat.yml up -d
+
+```
 
 ## <a name='Budgeting'></a>Budgeting 
 
