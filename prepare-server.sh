@@ -49,7 +49,7 @@ install_docker() {
   if [[ "${LARGEST_FS}" != "/" ]]; then
     DOCKER_ROOT="${LARGEST_FS}/var/lib/docker"
     sudo mkdir -p $DOCKER_ROOT
-    mkdir -p '/etc/docker'
+    sudo mkdir -p '/etc/docker'
     echo -e "{\n \"data-root\": \"${DOCKER_ROOT}\"\n}" | sudo tee /etc/docker/daemon.json > /dev/null
   fi
   
