@@ -93,7 +93,7 @@ cp ~/our-chat/nginx.conf ~/nginx.conf
 
 ## <a name='AWSconnectivity'></a>AWS connectivity
 
-Export the AWS credentials and region of the Bedrock service account (the one that has only the AmazonBedrockFullAccess policy attached) to environment variables, go the terminal of another computer that has the right credentials configured and paste these 4 commands to the terminal to generate the export statements (You can change the AWS_PROFILE environment variable to something else if you are working with a different AWS profile, e.g such as `bedrock`):
+Export the AWS credentials and region of the Bedrock service account (the one that has only the AmazonBedrockFullAccess policy attached) to environment variables, go to the terminal of another computer that has the right credentials configured, and paste these 4 commands into the terminal to generate the export statements below (You can change the AWS_PROFILE environment variable to something else if you are working with a different AWS profile, e.g such as `bedrock`):
 
 ```
 export AWS_PROFILE="default"
@@ -116,7 +116,7 @@ Then test the connectivity to AWS Bedrock by running:
 ~/our-chat/tests/bedrock-test.py
 ```
 
-You should see that your credentials have been written to the correct places under ~/.aws and Bedrock shows a list of available models and responds to a "Hello World" prompt:
+You should see that your credentials have been written to the correct places under ~/.aws by bedrock-test.py and Bedrock shows a list of available models and responds to a "Hello World" prompt:
 
 ```
 Written to /home/librechat/.aws/credentials: AWS credentials for [default]
@@ -134,7 +134,7 @@ Response to 'Hello, world' with model anthropic.claude-3-5-sonnet-20240620-v1:0:
  Hello! How can I assist you today? Feel free to ask me any questions or let me know if you need help with anything.
 ```
 
-If you don't get that response or the script shows an error, go back to your AWS Administrator for troubleshooting your AWS credentials or permissions before you continue. (Note: For each AWS account access to some bedrock models must be specifically requested and a EULA needs to be accepted in the AWS Console)
+If you don't get that response or the script shows an error, go back to your AWS Administrator for troubleshooting your AWS credentials or permissions before you continue. (Note: To access some bedrock models you must specifically request authorization for each AWS account as you need to accpet an EULA)
 
 You can find more details about AWS in the AWS budget section below. 
 
@@ -249,39 +249,46 @@ When all the prep work is done correctly, you should be able to run `install-lib
 ~/our-chat/install-librechat.sh
 ```
 
-have a running system in a few seconds:
+have a running system in a few minutes:
 
 ```
+$ ~/our-chat/install-librechat.sh
+Installing Docker Compose plugin...
+  % Total    % Received % Xferd  Average Speed   Time    Time     Time  Current
+                                 Dload  Upload   Total   Spent    Left  Speed
+  0     0    0     0    0     0      0      0 --:--:-- --:--:-- --:--:--     0
+100 59.2M  100 59.2M    0     0  81.0M      0 --:--:-- --:--:-- --:--:-- 81.0M
 Cloning into 'LibreChat'...
-remote: Enumerating objects: 33792, done.
-remote: Counting objects: 100% (5880/5880), done.
-remote: Compressing objects: 100% (1247/1247), done.
-remote: Total 33792 (delta 5103), reused 4786 (delta 4622), pack-reused 27912 (from 1)
-Receiving objects: 100% (33792/33792), 43.72 MiB | 44.24 MiB/s, done.
-Resolving deltas: 100% (24182/24182), done.
-Copying /home/ochat/LibreChat/deploy-compose.yml to /home/ochat/LibreChat/deploy-compose-ourchat.yml
+remote: Enumerating objects: 33745, done.
+remote: Counting objects: 100% (346/346), done.
+remote: Compressing objects: 100% (214/214), done.
+remote: Total 33745 (delta 202), reused 204 (delta 129), pack-reused 33399 (from 1)
+Receiving objects: 100% (33745/33745), 45.30 MiB | 21.56 MiB/s, done.
+Resolving deltas: 100% (23893/23893), done.
+Copying /opt/home/ochat/LibreChat/deploy-compose.yml to /opt/home/ochat/LibreChat/deploy-compose-ourchat.yml
+nginx.conf has been updated with the new SSL configuration.
+deploy-compose-ourchat.yml has been updated to include /etc/letsencrypt.
 ~/.awsrc has been added to .bashrc
-Copying /home/ochat/.env to /home/ochat/LibreChat/.env and expanding env vars
-Copying /home/ochat/librechat.yaml to /home/ochat/LibreChat/librechat.yaml
-Copying /home/ochat/nginx.conf to /home/ochat/LibreChat/client/nginx.conf
-Generating DH parameters, 2048 bit long safe prime
-.
-.
-[+] Running 8/8
- ✔ Network librechat_default       Created
- ✔ Volume "librechat_pgdata2"      Created 
- ✔ Container chat-mongodb          Started 
- ✔ Container chat-meilisearch      Started 
- ✔ Container librechat-vectordb-1  Started 
- ✔ Container librechat-rag_api-1   Started 
- ✔ Container LibreChat-API         Started 
- ✔ Container LibreChat-NGINX       Started 
-
+Copying /opt/home/ochat/.env to /opt/home/ochat/LibreChat/.env and expanding env vars
+Copying /opt/home/ochat/librechat.yaml to /opt/home/ochat/LibreChat/librechat.yaml
+Copying /opt/home/ochat/nginx.conf to /opt/home/ochat/LibreChat/client/nginx.conf
+  % Total    % Received % Xferd  Average Speed   Time    Time     Time  Current
+                                 Dload  Upload   Total   Spent    Left  Speed
+100   423  100   423    0     0   3410      0 --:--:-- --:--:-- --:--:--  3439
 no crontab for ochat
-Cron job added to run /home/ochat/purge_old_messages.py daily at 2:22 AM
-
-stopping: docker compose -f /home/ochat/LibreChat/deploy-compose-ourchat.yml down
-starting: docker compose -f /home/ochat/LibreChat/deploy-compose-ourchat.yml up -d
+no crontab for ochat
+Cron job added to run /usr/bin/docker compose -f /opt/home/ochat/LibreChat/deploy-compose-ourchat.yml up -d at reboot.
+Cron job added to run /opt/home/ochat/our-chat/purge_old_messages.py daily at 2:22 AM.
+ ✔ Container librechat-vectordb-1  Started                                         1.4s
+ ✔ Container chat-meilisearch      Started                                         1.4s
+ ✔ Container chat-mongodb          Started                                         1.4s
+ ✔ Container librechat-rag_api-1   Started                                         1.7s
+ ✔ Container LibreChat-API         Started                                         2.5s
+ ✔ Container LibreChat-NGINX       Started                                         4.2s
+stopping: docker compose -f /opt/home/ochat/LibreChat/deploy-compose-ourchat.yml down
+starting: docker compose -f /opt/home/ochat/LibreChat/deploy-compose-ourchat.yml up -d
+If you run this command you should see '<title>LibreChat</title>':
+curl -s https://ourchat.domain.edu | grep LibreChat
 ```
 
 Now try to access your chat system, e.g. `https://ourchat.domain.edu`. If you encounter issues, please see the [troubleshooting](#troubleshooting) section below.
