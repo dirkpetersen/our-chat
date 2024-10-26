@@ -48,6 +48,7 @@ Table of Contents:
 		- [cannot create docker group](#cannot-create-docker-group)
 		- [I don't have root permissions](#i-dont-have-root-permissions)
 		- [Cleaning up docker](#cleaning-up-docker)
+		- [Moving docker data to different volume](#moving-docker-data-to-different-volume)
 
 <!-- vscode-markdown-toc-config
 	numbering=false
@@ -492,4 +493,34 @@ sudo systemctl stop docker
 sudo rm -rf /var/lib/docker/*
 sudo rm -rf /var/lib/containerd/*
 sudo systemctl start docker
+```
+
+### Moving docker data to different volume 
+
+Let's assume docker should move to `/vol1/var/lib/docker/`. Execute these steps.
+
+as user ochat run 
+
+```
+docker compose -f ~/LibreChat/deploy-compose-ourchat.yml down
+```
+
+As administrative user with sudo permission to rsync run this:
+
+```
+NEWROOT="/vol1/var/lib/docker"
+mkdir -p /tmp/myetc/docker
+sudo systemctl stop docker
+echo -e "{\n \"data-root\": \"${NEWROOT}\"\n}" > /tmp/myetc/docker/daemon.json
+sudo rsync --chown root:root -a /tmp/myetc/docker/ /etc/docker/
+sudo rsync -aAHSXv --mkpath --stats /var/lib/docker/ ${NEWROOT}/
+mv /var/lib/docker /var/lib/docker.old
+sudo systemctl start docker
+sudo su - ochat
+```
+
+as bask as user ochat run
+
+```
+docker compose -f ~/LibreChat/deploy-compose-ourchat.yml up -d
 ```
