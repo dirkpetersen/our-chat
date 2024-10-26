@@ -114,7 +114,7 @@ install_docker_compose_plugin() {
 
 # Function to activate Certbot certificates
 activate_certbot_certs() {
-  local NGINX_CONF=${CUSTOM_CFG_PATH}/nginx.conf
+  local NGINX_CONF=${CUSTOM_CFG_PATH}/nginx-ourchat.conf
 
   # Check if the domain file exists
   if [[ -z ${FQDN} ]]; then
@@ -126,23 +126,26 @@ activate_certbot_certs() {
     return 1
   fi
 
-  # Edit nginx.conf to comment out the old SSL lines and add new ones
+  # Edit nginx-ourchat.conf to comment out the old SSL lines and add new ones
   sed -i \
-  -e '/ssl_certificate \/etc\/librechat\/ssl\/our-chat.pem;/ s/^/# /' \
-  -e '/ssl_certificate_key \/etc\/librechat\/ssl\/our-chat.pem;/ s/^/# /' \
-  -e '/ssl_password_file \/etc\/librechat\/ssl\/our-chat.pw;/ s/^/# /' \
-  -e "/ssl_password_file \/etc\/librechat\/ssl\/our-chat.pw;/a\\
-    ssl_certificate /etc/letsencrypt/live/${FQDN}/fullchain.pem;\\
-    ssl_certificate_key /etc/letsencrypt/live/${FQDN}/privkey.pem;" \
-  "${NGINX_CONF}"
+    -e '|ssl_certificate /etc/librechat/ssl/our-chat.pem;| s|^|# |' \
+    -e '|ssl_certificate_key /etc/librechat/ssl/our-chat.pem;| s|^|# |' \
+    -e '|ssl_password_file /etc/librechat/ssl/our-chat.pw;| s|^|# |' \
+    -e "|ssl_password_file /etc/librechat/ssl/our-chat.pw;|a\\
+      ssl_certificate /etc/letsencrypt/live/${FQDN}/fullchain.pem;\\
+      ssl_certificate_key /etc/letsencrypt/live/${FQDN}/privkey.pem;" \
+    "${NGINX_CONF}"
+
 
   echo "nginx.conf has been updated with the new SSL configuration."
 
   # Add the /etc/letsencrypt line in deploy-compose file
-  sed -i "/- \.\/client\/nginx\.conf:\/etc\/nginx\/conf\.d\/default\.conf/a \\
-      - /etc/letsencrypt:/etc/letsencrypt" \
-  "${LIBRECHAT_PATH}/${DEPLOY_COMPOSE}"
+  sed -i "|- ./client/nginx-ourchat.conf:/etc/nginx/conf.d/default.conf|a \\
+     - /etc/letsencrypt:/etc/letsencrypt" \
+     "${LIBRECHAT_PATH}/${DEPLOY_COMPOSE}"
+
   echo "${DEPLOY_COMPOSE} has been updated to include /etc/letsencrypt."
+
 }
 
 ######### Main Script ###################################################
@@ -208,18 +211,25 @@ else
   # use the full blown RAG container - not needed for bedrock 
   #sed -i 's/librechat-rag-api-dev-lite:latest/librechat-rag-api-dev:latest/g' "${LIBRECHAT_PATH}/${DEPLOY_COMPOSE}"
 
-  # if not using librechat nginx make sure we can use the system nginx by using different ports
-  if [[ -f ${CUSTOM_CFG_PATH}/nginx.conf ]]; then 
+  # use libechat nginx with a custom config file
+  if [[ -f ${CUSTOM_CFG_PATH}/nginx-ourchat.conf ]]; then 
+    sed -i 's|- ./client/nginx.conf:/etc/nginx/conf.d/default.conf|' \
+     '- ./client/nginx-ourchat.conf:/etc/nginx/conf.d/default.conf|' \
+    "${LIBRECHAT_PATH}/${DEPLOY_COMPOSE}"
+    echo "${DEPLOY_COMPOSE} has been updated to use nginx-ourchat.conf"
+
     activate_certbot_certs
   else
+    # if not using librechat nginx make sure we can use the system nginx by using different ports
     sed -i '/ports:/,/^[^ ]/ s/- 80:80/- 2080:80/; /ports:/,/^[^ ]/ s/- 443:443/- 2443:443/' \
               ${LIBRECHAT_PATH}/${DEPLOY_COMPOSE}
   fi
 fi
 
+# this needs to be disabled as it interferes with git pull updates 
 # remove some non-functional bedrock models; this works only in dev mode 
-sed -i "/^[[:space:]]*'ai21.jamba-instruct-v1:0',/s/^[[:space:]]*/&\/\/ /" \
-              ${LIBRECHAT_PATH}/packages/data-provider/src/config.ts
+#sed -i "/^[[:space:]]*'ai21.jamba-instruct-v1:0',/s/^[[:space:]]*/&\/\/ /" \
+#              ${LIBRECHAT_PATH}/packages/data-provider/src/config.ts
 
 # pull aws credentials into env vars
 aws_creds
