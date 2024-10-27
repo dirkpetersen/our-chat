@@ -202,8 +202,9 @@ After you have configured all 7 settings, please use the LDAP test script `~/our
 
 ```
 ~/our-chat/tests/ldap-test.py peterdir
-
-/ldap-test.py
+```
+and should see something like this 
+```
 Successfully read environment variables: ['LDAP_URL', 'LDAP_USER_SEARCH_BASE', 'LDAP_BIND_DN', 'LDAP_BIND_CREDENTIALS', 'LDAP_LOGIN_USES_USERNAME', 'LDAP_SEARCH_FILTER', 'LDAP_FULL_NAME']
 
 Connected as: CN=myserviceaccount,OU=Service Accounts,OU=User Accounts,DC=domain,DC=edu

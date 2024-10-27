@@ -213,8 +213,8 @@ else
 
   # use libechat nginx with a custom config file
   if [[ -f ${CUSTOM_CFG_PATH}/nginx-ourchat.conf ]]; then 
-    sed -i 's|- ./client/nginx.conf:/etc/nginx/conf.d/default.conf|' \
-     '- ./client/nginx-ourchat.conf:/etc/nginx/conf.d/default.conf|' \
+    sed -i 's|- ./client/nginx.conf:/etc/nginx/conf.d/default.conf|\
+     - ./client/nginx-ourchat.conf:/etc/nginx/conf.d/default.conf|' \
     "${LIBRECHAT_PATH}/${DEPLOY_COMPOSE}"
     echo "${DEPLOY_COMPOSE} has been updated to use nginx-ourchat.conf"
 
