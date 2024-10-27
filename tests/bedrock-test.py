@@ -65,7 +65,8 @@ print('\nList of available models on AWS Bedrock:\n')
 amodel = None
 for model in available_models['modelSummaries']:
     if 'anthropic' in model['modelId'].lower():
-        amodel = model['modelId']
+        if not amodel:
+            amodel = model['modelId']
     print(model['modelId'])
 
 if not amodel:
