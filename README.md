@@ -33,7 +33,7 @@ Table of Contents:
 	- [LibreChat Configuration](#librechat-configuration)
 		- [.env](#env)
 		- [librechat.yaml (optional)](#librechatyaml-optional)
-		- [nginx-ochat.conf (optional)](#nginx-ochatconf-optional)
+		- [nginx-ourchat.conf (optional)](#nginx-ourchatconf-optional)
 	- [Install LibreChat](#install-librechat)
 	- [Manage and update LibreChat](#manage-and-update-librechat)
 	- [Budgeting](#budgeting)
@@ -92,14 +92,14 @@ After the script has finished, switch to the ochat user with `sudo su - ochat` a
 
 ## <a name='Prepareinstall'></a>Prepare install
 
-After switching to the ochat user (`sudo su - ochat`), please clone the [our-chat](https://github.com/dirkpetersen/our-chat/) repository from GitHub and copy the .env.ochat, librechat.yml and nginx-ochat.conf files to the root of the home directory of the ochat user:
+After switching to the ochat user (`sudo su - ochat`), please clone the [our-chat](https://github.com/dirkpetersen/our-chat/) repository from GitHub and copy the .env.ochat, librechat.yml and nginx-ourchat.conf files to the root of the home directory of the ochat user:
 
 ```
 cd ~
 git clone https://github.com/dirkpetersen/our-chat/
 cp ~/our-chat/.env.ochat ~/.env
 cp ~/our-chat/librechat.yaml ~/librechat.yaml
-cp ~/our-chat/nginx-ochat.conf ~/nginx-ochat.conf
+cp ~/our-chat/nginx-ourchat.conf ~/nginx-ourchat.conf
 ```
 
 ## <a name='AWSconnectivity'></a>AWS connectivity
@@ -242,9 +242,9 @@ registration:
    - "university2.edu"
 ```
 
-### <a name='nginxconfoptional'></a>nginx-ochat.conf (optional)
+### <a name='nginxconfoptional'></a>nginx-ourchat.conf (optional)
 
-The only change `vi ~/nginx-ochat.conf && cp ~/nginx-ochat.conf ~/LibreChat/client/` likely requires, is setting the filenames for the SSL certificates for https, if you choose a different cerificate name than our-chat.pem / our-chat.pw . You can set addional nginx headers to further enhance security.
+The only change `vi ~/nginx-ourchat.conf && cp ~/nginx-ourchat.conf ~/LibreChat/client/` likely requires, is setting the filenames for the SSL certificates for https, if you choose a different cerificate name than our-chat.pem / our-chat.pw . You can set addional nginx headers to further enhance security.
 
 ```
    ssl_certificate /etc/librechat/ssl/our-chat.pem;
@@ -277,12 +277,12 @@ remote: Total 33745 (delta 202), reused 204 (delta 129), pack-reused 33399 (from
 Receiving objects: 100% (33745/33745), 45.30 MiB | 21.56 MiB/s, done.
 Resolving deltas: 100% (23893/23893), done.
 Copying /opt/home/ochat/LibreChat/deploy-compose.yml to /opt/home/ochat/LibreChat/deploy-compose-ourchat.yml
-nginx-ochat.conf has been updated with the new SSL configuration.
+nginx-ourchat.conf has been updated with the new SSL configuration.
 deploy-compose-ourchat.yml has been updated to include /etc/letsencrypt.
 ~/.awsrc has been added to .bashrc
 Copying /opt/home/ochat/.env to /opt/home/ochat/LibreChat/.env and expanding env vars
 Copying /opt/home/ochat/librechat.yaml to /opt/home/ochat/LibreChat/librechat.yaml
-Copying /opt/home/ochat/nginx-ochat.conf to /opt/home/ochat/LibreChat/client/nginx-ochat.conf
+Copying /opt/home/ochat/nginx-ourchat.conf to /opt/home/ochat/LibreChat/client/nginx-ourchat.conf
   % Total    % Received % Xferd  Average Speed   Time    Time     Time  Current
                                  Dload  Upload   Total   Spent    Left  Speed
 100   423  100   423    0     0   3410      0 --:--:-- --:--:-- --:--:--  3439
@@ -367,7 +367,7 @@ As the system only stores data temporarily, disaster recovery and business conti
 ```
 ~/.env
 ~/librechat.yaml
-~/nginx-ochat.conf
+~/nginx-ourchat.conf
 ~/our-chat.pem
 ~/our-chat.pw
 ```
@@ -379,7 +379,7 @@ While following the install procedures do not edit any of the 5 files but restor
 ```
 cp ~/.env ~/LibreChat/
 cp ~/librechat.yaml ~/LibreChat/
-cp ~/nginx-ochat.conf ~/LibreChat/client/
+cp ~/nginx-ourchat.conf ~/LibreChat/client/
 cp ~/our-chat.pem ~/LibreChat/client/ssl/
 cp ~/our-chat.pw ~/LibreChat/client/ssl/
 ```
