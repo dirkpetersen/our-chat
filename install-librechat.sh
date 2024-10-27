@@ -279,7 +279,7 @@ echo "stopping: docker compose -f ${LIBRECHAT_PATH}/${DEPLOY_COMPOSE} down"
 echo "starting: docker compose -f ${LIBRECHAT_PATH}/${DEPLOY_COMPOSE} up -d"
 
 if [[ -n ${FQDN} ]]; then
-  echo "If you run this command you should see '<title>LibreChat</title>':"
+  echo "*** If you wait a little and run this command you should see '<title>LibreChat</title>': ***"
   echo "curl -s https://${FQDN} | grep LibreChat"
 fi 
 
