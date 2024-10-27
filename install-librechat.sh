@@ -295,7 +295,7 @@ if [[ -f ${CUSTOM_CFG_PATH}/${DEPLOY_COMPOSE} ]]; then
 fi
 
 grep -qxF '# Instructions to update LibreChat' ~/.bashrc || echo -e \
-'\n# Instructions to update LibreChat\ncat << EOF\nTo update LibreChat run this:' \
+'\n# Instructions to update LibreChat\ncat << EOF\n\nTo update LibreChat run this:' \
 '\n\ncd ~/LibreChat\ndocker compose -f deploy-compose-ourchat.yml down\ngit pull' \
 '\ndocker compose -f deploy-compose-ourchat.yml pull\ndocker compose -f' \
 'deploy-compose-ourchat.yml up\nEOF\n' >> ~/.bashrc
