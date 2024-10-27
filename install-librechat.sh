@@ -114,7 +114,6 @@ install_docker_compose_plugin() {
 
 # Function to activate Certbot certificates
 activate_certbot_certs() {
-  local NGINX_CONF=${CUSTOM_CFG_PATH}/nginx-ourchat.conf
 
   # Check if the domain file exists
   if [[ -z ${FQDN} ]]; then
@@ -134,9 +133,9 @@ activate_certbot_certs() {
     -e "\|ssl_password_file /etc/librechat/ssl/our-chat.pw;|a\\
     ssl_certificate /etc/letsencrypt/live/${FQDN}/fullchain.pem;\\
     ssl_certificate_key /etc/letsencrypt/live/${FQDN}/privkey.pem;" \
-    "${NGINX_CONF}"
+    "${CUSTOM_CFG_PATH}/nginx-ourchat.conf"
 
-  echo "nginx.conf has been updated with the new SSL configuration."
+  echo "nginx-ourchat.conf has been updated with the new SSL configuration."
 
   # Add the /etc/letsencrypt line in deploy-compose file
   sed -i '\|- ./client/nginx-ourchat.conf:/etc/nginx/conf.d/default.conf|a\
@@ -252,13 +251,10 @@ else
   cp  ${LIBRECHAT_PATH}/librechat.example.yaml ${LIBRECHAT_PATH}/librechat.yaml
 fi
 
-# client/nginx.conf
-if [[ -f ${CUSTOM_CFG_PATH}/nginx.conf ]]; then
-  if ! [[ -f ${LIBRECHAT_PATH}/client/nginx.conf.org  ]]; then
-    mv ${LIBRECHAT_PATH}/client/nginx.conf ${LIBRECHAT_PATH}/client/nginx.conf.org
-  fi 
-  echo "Copying ${CUSTOM_CFG_PATH}/nginx.conf to ${LIBRECHAT_PATH}/client/nginx.conf"
-  cp  ${CUSTOM_CFG_PATH}/nginx.conf ${LIBRECHAT_PATH}/client/nginx.conf
+# client/nginx-ourchat.conf
+if [[ -f ${CUSTOM_CFG_PATH}/nginx-ourchat.conf ]]; then
+  echo "Copying ${CUSTOM_CFG_PATH}/nginx-ourchat.conf to ${LIBRECHAT_PATH}/client/nginx-ourchat.conf"
+  cp  ${CUSTOM_CFG_PATH}/nginx-ourchat.conf ${LIBRECHAT_PATH}/client/nginx-ourchat.conf
   mkdir -p ${LIBRECHAT_PATH}/client/ssl
   if [[ -f ${CUSTOM_CFG_PATH}/our-chat.pem ]]; then
     cp ${CUSTOM_CFG_PATH}/our-chat.pem ${LIBRECHAT_PATH}/client/ssl
