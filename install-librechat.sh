@@ -202,7 +202,8 @@ else
     cp "${LIBRECHAT_PATH}/deploy-compose.yml" "${LIBRECHAT_PATH}/${DEPLOY_COMPOSE}"
   fi
   # insert path to ssl certs at /etc/librechat/ssl
-  sed -i '/- \.\/client\/nginx\.conf:\/etc\/nginx\/conf\.d\/default\.conf/a\      - ./client/ssl:/etc/librechat/ssl' "${LIBRECHAT_PATH}/${DEPLOY_COMPOSE}"
+  sed -i '\|/etc/nginx/conf.d/default.conf|a\      - ./client/ssl:/etc/librechat/ssl' \
+      "${LIBRECHAT_PATH}/${DEPLOY_COMPOSE}"
   # allow access to Mongo DB to purge old messages
   sed -i '/# ports:.*# Uncomment this to access mongodb/,+1 s/^    # /    /' "${LIBRECHAT_PATH}/${DEPLOY_COMPOSE}"
   
@@ -211,8 +212,7 @@ else
 
   # use libechat nginx with a custom config file
   if [[ -f ${CUSTOM_CFG_PATH}/nginx-ourchat.conf ]]; then 
-    sed -i 's|- ./client/nginx.conf:/etc/nginx/conf.d/default.conf|\
-     - ./client/nginx-ourchat.conf:/etc/nginx/conf.d/default.conf|' \
+    sed -i 's|      - ./client/nginx.conf:/etc/nginx/conf.d/default.conf|      - ./client/nginx-ourchat.conf:/etc/nginx/conf.d/default.conf|' \
     "${LIBRECHAT_PATH}/${DEPLOY_COMPOSE}"
     echo "${DEPLOY_COMPOSE} has been updated to use nginx-ourchat.conf"
 
