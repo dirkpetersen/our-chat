@@ -138,9 +138,8 @@ activate_certbot_certs() {
   echo "nginx-ourchat.conf has been updated with the new SSL configuration."
 
   # Add the /etc/letsencrypt line in deploy-compose file
-  sed -i '\|- ./client/nginx-ourchat.conf:/etc/nginx/conf.d/default.conf|a\
-     - /etc/letsencrypt:/etc/letsencrypt' \
-     "${LIBRECHAT_PATH}/${DEPLOY_COMPOSE}"
+  sed -i '\|/etc/nginx/conf.d/default.conf|a\      - /etc/letsencrypt:/etc/letsencrypt' \
+      "${LIBRECHAT_PATH}/${DEPLOY_COMPOSE}"  
 
   echo "${DEPLOY_COMPOSE} has been updated to include /etc/letsencrypt."
 
