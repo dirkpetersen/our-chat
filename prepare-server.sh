@@ -177,7 +177,7 @@ get_public_ip() {
 # Function to check if a port is open, returns 0 (true) if open, 1 (false) if closed
 is_port_open() {
   local port=$1
-  local hostname=${2:-$(get_public_ip)}
+  local hostname=${2:-${PUBLIC_IP}}
   local url="https://ports.yougetsignal.com/check-port.php"
 
   sudo nc -l -p 80 &>/dev/null &
@@ -206,9 +206,13 @@ function main {
   LARGEST_FS=$(df -l --output=target,avail | awk 'NR>1 {print $2,$1}' | sort -nr | head -n1 | awk '{print $2}')
   install_os_packages
   install_docker
+  PUBLIC_IP=$(get_public_ip)
+  testdomain=$(getent hosts ${PUBLIC_IP} | head -n 1 | awk '{print $2}')
   # Check if /var/tmp/librechat-domain.txt exists and read the domain from there
   if [[ -f /var/tmp/librechat-domain.txt ]]; then
     default_domain=$(cat /var/tmp/librechat-domain.txt)
+  elif [[ -n $testdomain ]]; then
+    default_domain=$testdomain
   else
     default_domain=""
   fi
@@ -216,10 +220,10 @@ function main {
     mydomain=${1}
   else
     echo ""
-    echo "Enter the full hostname (FQDN) of this server to generate a Let's Encrypt SSL certificate"
+    echo "Confirm, change or remove the full hostname (FQDN) of this server to generate a Let's Encrypt SSL certificate"
     echo "NOTE: For this to work, this server must be reachable on port 80 (http) from the internet."
     echo "You can also skip this step, and manually setup SSL certs from your IT team later."
-    echo "Please hit just 'Enter' to skip creating Let's Encrypt SSL certs (5 min timeout)"
+    echo "Please remove the default FQDN and hit 'Enter' to skip creating Let's Encrypt SSL certs (5 min timeout)"
     read -t 300 -e -i "$default_domain" -p "Enter FQDN: " mydomain < /dev/tty
   fi
   if [[ -n ${mydomain} ]]; then
