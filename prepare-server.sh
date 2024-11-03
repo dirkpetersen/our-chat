@@ -212,7 +212,11 @@ function main {
   if [[ -f /var/tmp/librechat-domain.txt ]]; then
     default_domain=$(cat /var/tmp/librechat-domain.txt)
   elif [[ -n $testdomain ]]; then
-    default_domain=$testdomain
+    if ! [[ "$testdomain" =~ (amazonaws\.com|google\.com)$ ]]; then
+      default_domain=$testdomain
+    else
+      default_domain=""
+    fi
   else
     default_domain=""
   fi
