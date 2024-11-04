@@ -224,10 +224,12 @@ function main {
     mydomain=${1}
   else
     echo ""
-    echo "Confirm, change or remove the full hostname (FQDN) of this server to generate a Let's Encrypt SSL certificate"
-    echo "NOTE: For this to work, this server must be reachable on port 80 (http) from the internet."
-    echo "You can also skip this step, and manually setup SSL certs from your IT team later."
-    echo "Please remove the default FQDN and hit 'Enter' to skip creating Let's Encrypt SSL certs (5 min timeout)"
+    echo "Confirm, change or remove the full hostname (FQDN) of this server to"
+    echo "generate a Let's Encrypt SSL certificate. NOTE: It will only work, "
+    echo "if this server is reachable on port 80 (http) from the internet. "
+    echo "If you do NOT want to use Let's encrypt and instead manually setup SSL "
+    echo "certs from your IT team later, please ensure that the FQDN remains blank "
+    echo "and just hit 'Enter' to skip Let's Encrypt SSL certs (5 min timeout)"
     read -t 300 -e -i "$default_domain" -p "Enter FQDN: " mydomain < /dev/tty
   fi
   if [[ -n ${mydomain} ]]; then
