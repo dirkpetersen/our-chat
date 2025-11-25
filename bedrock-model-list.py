@@ -290,9 +290,9 @@ def main():
         help='Print verbose testing information to stderr'
     )
     parser.add_argument(
-        '--strict',
+        '--loose',
         action='store_true',
-        help='Use streaming to validate models (like LibreChat does) - slower but more accurate'
+        help='Use lenient testing mode (faster but less accurate) - by default strict streaming mode is used'
     )
     parser.add_argument(
         '--debug',
@@ -308,10 +308,15 @@ def main():
 
     args = parser.parse_args()
 
+    # Strict mode is default, --loose disables it
+    strict_mode = not args.loose
+
     # Parse ignore list
     ignore_list = [s.strip() for s in args.ignore.split(',') if s.strip()]
 
     if args.verbose:
+        mode = "LOOSE (lenient)" if args.loose else "STRICT (streaming validation)"
+        print(f"Testing mode: {mode}", file=sys.stderr)
         print(f"Fetching models from region: {args.region}", file=sys.stderr)
         if ignore_list:
             print(f"Ignoring models starting with: {ignore_list}", file=sys.stderr)
@@ -339,7 +344,7 @@ def main():
     )
 
     # Find working models
-    working_models = find_working_models(filtered_models, bedrock_runtime, args.verbose, args.strict, args.debug)
+    working_models = find_working_models(filtered_models, bedrock_runtime, args.verbose, strict_mode, args.debug)
 
     if args.verbose:
         print("", file=sys.stderr)
@@ -355,7 +360,7 @@ def main():
             # Check if model already has a prefix
             if first_model.startswith('us.') or first_model.startswith('global.'):
                 # Already has prefix, test as-is
-                test_id = test_model_with_prefix(bedrock_runtime, first_model, '', strict=args.strict, debug=args.debug)
+                test_id = test_model_with_prefix(bedrock_runtime, first_model, '', strict=strict_mode, debug=args.debug)
                 if test_id:
                     first_working_models.append(test_id)
                 elif args.verbose:
@@ -364,7 +369,7 @@ def main():
                 # No prefix, try different prefixes
                 first_model_working = None
                 for prefix in ['us.', 'global.', '']:
-                    test_id = test_model_with_prefix(bedrock_runtime, first_model, prefix, strict=args.strict, debug=args.debug)
+                    test_id = test_model_with_prefix(bedrock_runtime, first_model, prefix, strict=strict_mode, debug=args.debug)
                     if test_id:
                         first_model_working = test_id
                         break
