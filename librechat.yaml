@@ -16,37 +16,97 @@ interface:
 
   # Terms of service
   termsOfService:
-    externalUrl: 'https://librechat.ai/tos'
+    externalUrl: 'https://www.university.edu/acceptable-use'
     openNewTab: true
     modalAcceptance: true
-    modalTitle: "Terms of Service for LibreChat "
+    modalTitle: "University Chat Usage Policy - REQUIRED AGREEMENT"
     modalContent: |
-      # Terms and Conditions for LibreChat
+      # University Chat Usage Policy and Data Restrictions
 
-      *Effective Date: September 30, 2024*
+      *Effective Date: January 2, 2025*
 
-      Welcome to LibreChat, the informational website for the open-source AI chat platform.
+      ## IMPORTANT: You Must Accept This Agreement Before Using University Chat
 
-      ## 1. Notice 
+      By clicking "Accept" below, you certify and agree to the following:
 
-      This is a private system. All users of this system are subject to having their activities audited. This system is to be used only for internal business, and access requires explicit written authorization. Unauthorized access or attempts to damage data, programs, or equipment may violate applicable law and could result in corrective action or criminal prosecution. 
+      ### 1. Authorized Use
+
+      - ✅ You are affiliated with the university for legitimate university business
+      - ✅ This system is for research, education, and administrative purposes only
+      - ✅ You will use this system in compliance with the university's Acceptable Use Policy
+      - ⚠️ All activities on this system may be monitored and audited
+
+      ### 2. PROHIBITED DATA - You Must NOT Enter:
+
+      **The following data types are strictly prohibited in University Chat:**
+
+      - ❌ **Personal Health Information (PHI)** - HIPAA regulated data
+      - ❌ **Personally Identifiable Information (PII)** - Social Security Numbers, driver's license numbers, financial account numbers
+      - ❌ **Student Educational Records** - FERPA protected data
+      - ❌ **Financial Data** - Credit card numbers, bank account information, GLBA regulated data
+      - ❌ **Export-Controlled Information** - ITAR/EAR regulated technical data
+      - ❌ **Classified Information** - Any classified or confidential research data
+      - ❌ **Authentication Credentials** - Passwords, API keys, access tokens
+      - ❌ **Proprietary Third-Party Data** - Data belonging to external organizations without permission
+
+      ### 3. Data Handling and Privacy
+
+      - 📝 Your conversations are temporarily stored and automatically deleted after 180 days
+      - 🔍 Your username and display name are logged for audit purposes
+      - ☁️ Your queries are sent to cloud AI providers (AWS Bedrock, Azure OpenAI) or on-premises systems
+      - 🔒 Cloud providers do not use your data for model training per their enterprise agreements
+      - 📊 System administrators may review logs for security and troubleshooting purposes
+
+      ### 4. Acceptable Use
+
+      You agree to:
+      - Use University Chat only for legitimate research, education, or administrative work
+      - Respect intellectual property rights and avoid plagiarism
+      - Not attempt to bypass security controls or access unauthorized data
+      - Report any security concerns to security@university.edu
+      - Not use University Chat for commercial purposes or personal business
+
+      ### 5. Consequences of Violations
+
+      **Violations of this policy may result in:**
+      - Immediate account suspension
+      - Reporting to IT Security
+      - Disciplinary action per university policies
+      - Legal action if laws are violated
+
+      ### 6. Your Responsibilities
+
+      - 🎓 **Verify AI-generated content** - LLM responses may contain errors or hallucinations
+      - 📚 **Cite sources appropriately** - AI-assisted work must be properly attributed
+      - 🔐 **Protect your credentials** - Do not share your password
+      - 🚨 **Report incidents** - Contact support if you accidentally enter sensitive data
+
+      ### 7. System Availability
+
+      - This is a pilot system - availability is not guaranteed
+      - System may be unavailable during maintenance windows
+      - Data may be lost due to system issues (conversations are temporary by design)
+
+      ---
+
+      **By clicking "Accept", you acknowledge that you have read, understood, and agree to comply with this Usage Policy.**
+
+      **If you do not accept these terms, click "Decline" and do not use this system.**
+
+      For questions, contact: IT Support
+      For security concerns, contact: security@university.edu
 
 
-      ## 2. Non-Personal Data Collection
-
-      The Website uses cookies to enhance user experience, analyze site usage, and facilitate certain functionalities. By using the Website, you consent to the use of cookies in accordance with our Privacy Policy.
-
-      ## 3. Use of the Website
-
-      You agree to use the Website only for lawful purposes and in a manner that does not infringe the rights of, restrict, or inhibit anyone else's use and enjoyment of the Website. Prohibited behavior includes harassing or causing distress or inconvenience to any person, transmitting obscene or offensive content, or disrupting the normal flow of dialogue within the Website.
-
-
-# Example Registration Object Structure (optional)
+# Registration Configuration
+# Phase 1 (Pilot): Just-In-Time (JIT) Provisioning via LDAP
+# Access restricted to university.edu domain only
 registration:
-  socialLogins: ['github', 'google', 'discord', 'openid', 'facebook']
-  # allowedDomains:
-  # - "gmail.com"
-  # - "university.edu"
+  socialLogins: []  # Disabled - LDAP authentication only
+  allowedDomains:
+    - "university.edu"  # Only university email addresses permitted
+
+  # Phase 2 (Production): Uncomment LDAP group restriction in .env file
+  # and consider removing or tightening allowedDomains
 
 # rateLimits:
 #   fileUploads:
