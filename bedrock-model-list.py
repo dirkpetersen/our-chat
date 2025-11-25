@@ -357,6 +357,18 @@ def main():
         first_working_models = []
 
         for first_model in first_models:
+            # Skip models that match ignore patterns
+            should_skip = False
+            for ignore_prefix in ignore_list:
+                if first_model.startswith(ignore_prefix.strip()):
+                    should_skip = True
+                    if args.verbose:
+                        print(f"Skipping --first model '{first_model}' (matches ignore pattern '{ignore_prefix}')", file=sys.stderr)
+                    break
+
+            if should_skip:
+                continue
+
             # Check if model already has a prefix
             if first_model.startswith('us.') or first_model.startswith('global.'):
                 # Already has prefix, test as-is
