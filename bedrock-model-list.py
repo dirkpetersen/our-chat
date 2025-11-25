@@ -11,7 +11,7 @@ import argparse
 import boto3
 from botocore.exceptions import ClientError
 
-def test_model_with_prefix(bedrock_client, model_id, prefix=""):
+def test_model_with_prefix(bedrock_client, model_id, prefix="", strict=False):
     """
     Test if a model works with the given prefix.
     Returns the working model ID or None if it doesn't work.
@@ -90,38 +90,73 @@ def test_model_with_prefix(bedrock_client, model_id, prefix=""):
             })
 
         # Try to invoke the model
-        response = bedrock_client.invoke_model(
-            body=body,
-            modelId=test_model_id,
-            accept="application/json",
-            contentType="application/json"
-        )
-
-        # If we got here, the model invocation succeeded
-        return test_model_id
+        if strict:
+            # In strict mode, try streaming which is what LibreChat actually uses
+            response = bedrock_client.invoke_model_with_response_stream(
+                body=body,
+                modelId=test_model_id,
+                accept="application/json",
+                contentType="application/json"
+            )
+            # Try to read at least one event from the stream
+            event_stream = response.get('body')
+            for event in event_stream:
+                if 'chunk' in event:
+                    # Got a response chunk, model works
+                    return test_model_id
+            # If no chunks, still check if we got past the initial request
+            return test_model_id
+        else:
+            # Regular invoke (faster)
+            response = bedrock_client.invoke_model(
+                body=body,
+                modelId=test_model_id,
+                accept="application/json",
+                contentType="application/json"
+            )
+            # If we got here, the model invocation succeeded
+            return test_model_id
 
     except ClientError as e:
         error_code = e.response['Error']['Code']
-        error_message = e.response['Error'].get('Message', '')
+        error_message = e.response['Error'].get('Message', '').lower()
 
         if error_code == 'ResourceNotFoundException':
             # Model doesn't exist with this prefix - try next prefix
             return None
         elif error_code == 'ValidationException':
             # Check if it's a "model not found" type validation error
-            # Some prefixes that don't work return ValidationException
-            if 'model' in error_message.lower() and ('not found' in error_message.lower() or
-                                                     'does not exist' in error_message.lower() or
-                                                     'not support' in error_message.lower()):
+            # Look for specific patterns that indicate wrong prefix/model not available
+            not_found_patterns = [
+                'model not found',
+                'does not exist',
+                'not available',
+                'cannot find',
+                'unknown model',
+                'unsupported model',
+                'invalid model',
+                'no model named',
+                'model \'',  # Often followed by model name
+            ]
+            if any(pattern in error_message for pattern in not_found_patterns):
                 return None
-            # Otherwise it's probably just our test payload - model exists
+            # Otherwise it's probably just our test payload format - model exists
             return test_model_id
         elif error_code == 'AccessDeniedException':
             # Model exists but no access - count it as working for config
             return test_model_id
+        elif error_code == 'ThrottlingException':
+            # Throttled but model exists
+            return test_model_id
+        elif error_code == 'ModelStreamingNotSupportedException':
+            # Model exists but doesn't support streaming - still valid
+            return test_model_id
         else:
-            # Other errors - model probably doesn't work with this prefix
-            return None
+            # Other errors - check message for "not found" patterns
+            if 'not found' in error_message or 'does not exist' in error_message:
+                return None
+            # If no "not found" pattern, assume model exists but request had issues
+            return test_model_id
     except Exception as e:
         # Any other error - skip
         return None
@@ -157,9 +192,10 @@ def filter_models(models, ignore_list):
     return filtered
 
 
-def find_working_models(models, bedrock_runtime_client, verbose=False):
+def find_working_models(models, bedrock_runtime_client, verbose=False, strict=False):
     """
     Test each model with different prefixes and return list of working model IDs.
+    If strict=True, use streaming to validate (like LibreChat does).
     """
     working_models = []
 
@@ -171,7 +207,7 @@ def find_working_models(models, bedrock_runtime_client, verbose=False):
 
         # Try prefixes in order: us., global., no prefix
         for prefix in ['us.', 'global.', '']:
-            working_id = test_model_with_prefix(bedrock_runtime_client, model_id, prefix)
+            working_id = test_model_with_prefix(bedrock_runtime_client, model_id, prefix, strict=strict)
             if working_id:
                 if verbose:
                     prefix_str = f"with prefix '{prefix}'" if prefix else "without prefix"
@@ -213,6 +249,11 @@ def main():
         help='Print verbose testing information to stderr'
     )
     parser.add_argument(
+        '--strict',
+        action='store_true',
+        help='Use streaming to validate models (like LibreChat does) - slower but more accurate'
+    )
+    parser.add_argument(
         '--format',
         choices=['env', 'list', 'yaml'],
         default='env',
@@ -252,7 +293,7 @@ def main():
     )
 
     # Find working models
-    working_models = find_working_models(filtered_models, bedrock_runtime, args.verbose)
+    working_models = find_working_models(filtered_models, bedrock_runtime, args.verbose, args.strict)
 
     if args.verbose:
         print("", file=sys.stderr)
@@ -268,7 +309,7 @@ def main():
             # Check if model already has a prefix
             if first_model.startswith('us.') or first_model.startswith('global.'):
                 # Already has prefix, test as-is
-                test_id = test_model_with_prefix(bedrock_runtime, first_model, '')
+                test_id = test_model_with_prefix(bedrock_runtime, first_model, '', strict=args.strict)
                 if test_id:
                     first_working_models.append(test_id)
                 elif args.verbose:
@@ -277,7 +318,7 @@ def main():
                 # No prefix, try different prefixes
                 first_model_working = None
                 for prefix in ['us.', 'global.', '']:
-                    test_id = test_model_with_prefix(bedrock_runtime, first_model, prefix)
+                    test_id = test_model_with_prefix(bedrock_runtime, first_model, prefix, strict=args.strict)
                     if test_id:
                         first_model_working = test_id
                         break
