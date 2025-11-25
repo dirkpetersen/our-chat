@@ -53,12 +53,22 @@ def test_model_with_prefix(bedrock_client, model_id, prefix="", strict=False, de
             elif 'image' in base_model_id:
                 # Skip image generation models
                 return None
-            body = json.dumps({
-                "inputText": "Hi",
-                "textGenerationConfig": {
-                    "maxTokenCount": 10,
-                }
-            })
+            elif 'nova' in base_model_id:
+                # Amazon Nova models use messages format (like OpenAI/Anthropic)
+                body = json.dumps({
+                    "messages": [{"role": "user", "content": [{"text": "Hi"}]}],
+                    "inferenceConfig": {
+                        "maxTokens": 10,
+                    }
+                })
+            else:
+                # Amazon Titan models use inputText format
+                body = json.dumps({
+                    "inputText": "Hi",
+                    "textGenerationConfig": {
+                        "maxTokenCount": 10,
+                    }
+                })
         elif provider == 'ai21':
             body = json.dumps({
                 "prompt": "Hi",
