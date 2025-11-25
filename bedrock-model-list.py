@@ -376,27 +376,10 @@ def main():
             if should_skip:
                 continue
 
-            # Check if model already has a prefix
-            if first_model.startswith('us.') or first_model.startswith('global.'):
-                # Already has prefix, test as-is
-                test_id = test_model_with_prefix(bedrock_runtime, first_model, '', strict=strict_mode, debug=args.debug)
-                if test_id:
-                    first_working_models.append(test_id)
-                elif args.verbose:
-                    print(f"Warning: --first model '{first_model}' doesn't work", file=sys.stderr)
-            else:
-                # No prefix, try different prefixes
-                first_model_working = None
-                for prefix in ['us.', 'global.', '']:
-                    test_id = test_model_with_prefix(bedrock_runtime, first_model, prefix, strict=strict_mode, debug=args.debug)
-                    if test_id:
-                        first_model_working = test_id
-                        break
-
-                if first_model_working:
-                    first_working_models.append(first_model_working)
-                elif args.verbose:
-                    print(f"Warning: --first model '{first_model}' doesn't work", file=sys.stderr)
+            # User has already validated --first models, just add them directly without testing
+            first_working_models.append(first_model)
+            if args.verbose:
+                print(f"Using pre-validated --first model: {first_model}", file=sys.stderr)
 
         # Remove first models from working_models if they're already there
         # Use a set for faster deduplication
