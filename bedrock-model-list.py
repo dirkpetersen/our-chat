@@ -358,12 +358,19 @@ def main():
 
         for first_model in first_models:
             # Skip models that match ignore patterns
+            # Strip prefix (us./global.) before checking against ignore patterns
+            model_to_check = first_model
+            if first_model.startswith('us.'):
+                model_to_check = first_model[3:]  # Remove "us."
+            elif first_model.startswith('global.'):
+                model_to_check = first_model[7:]  # Remove "global."
+
             should_skip = False
             for ignore_prefix in ignore_list:
-                if first_model.startswith(ignore_prefix.strip()):
+                if model_to_check.startswith(ignore_prefix.strip()):
                     should_skip = True
                     if args.verbose:
-                        print(f"Skipping --first model '{first_model}' (matches ignore pattern '{ignore_prefix}')", file=sys.stderr)
+                        print(f"Skipping --first model '{first_model}' (base model '{model_to_check}' matches ignore pattern '{ignore_prefix}')", file=sys.stderr)
                     break
 
             if should_skip:
