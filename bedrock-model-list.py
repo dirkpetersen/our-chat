@@ -380,11 +380,25 @@ def main():
                     print(f"Warning: --first model '{first_model}' doesn't work", file=sys.stderr)
 
         # Remove first models from working_models if they're already there
-        for first_model in first_working_models:
-            working_models = [m for m in working_models if m != first_model]
+        # Use a set for faster deduplication
+        first_model_set = set(first_working_models)
+        working_models = [m for m in working_models if m not in first_model_set]
 
         # Add first models to the front in order
         working_models = first_working_models + working_models
+
+        if args.verbose:
+            print(f"After deduplication: {len(first_working_models)} from --first, {len(working_models) - len(first_working_models)} additional models", file=sys.stderr)
+            print("", file=sys.stderr)
+
+    # Final deduplication to ensure no duplicates in output (in case of any edge cases)
+    seen = set()
+    final_models = []
+    for model in working_models:
+        if model not in seen:
+            seen.add(model)
+            final_models.append(model)
+    working_models = final_models
 
     # Output in requested format
     if args.format == 'env':
