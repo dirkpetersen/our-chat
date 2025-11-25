@@ -11,7 +11,7 @@ import argparse
 import boto3
 from botocore.exceptions import ClientError
 
-def test_model_with_prefix(bedrock_client, model_id, prefix="", strict=False):
+def test_model_with_prefix(bedrock_client, model_id, prefix="", strict=False, debug=False):
     """
     Test if a model works with the given prefix.
     Returns the working model ID or None if it doesn't work.
@@ -29,6 +29,9 @@ def test_model_with_prefix(bedrock_client, model_id, prefix="", strict=False):
 
     # Prepare a minimal test payload based on model provider
     provider = base_model_id.split('.')[0].lower()
+
+    if debug:
+        print(f"  [DEBUG] Testing {test_model_id} (provider: {provider}, strict: {strict})", file=sys.stderr)
 
     try:
         # Prepare test body based on provider
@@ -103,8 +106,12 @@ def test_model_with_prefix(bedrock_client, model_id, prefix="", strict=False):
             for event in event_stream:
                 if 'chunk' in event:
                     # Got a response chunk, model works
+                    if debug:
+                        print(f"    [RESULT] Got streaming response - model works!", file=sys.stderr)
                     return test_model_id
             # If no chunks, still check if we got past the initial request
+            if debug:
+                print(f"    [RESULT] Streaming invocation succeeded (no chunks yet, but request went through)", file=sys.stderr)
             return test_model_id
         else:
             # Regular invoke (faster)
@@ -115,14 +122,22 @@ def test_model_with_prefix(bedrock_client, model_id, prefix="", strict=False):
                 contentType="application/json"
             )
             # If we got here, the model invocation succeeded
+            if debug:
+                print(f"    [RESULT] Regular invocation succeeded - model works!", file=sys.stderr)
             return test_model_id
 
     except ClientError as e:
         error_code = e.response['Error']['Code']
-        error_message = e.response['Error'].get('Message', '').lower()
+        error_message = e.response['Error'].get('Message', '')
+        error_message_lower = error_message.lower()
+
+        if debug:
+            print(f"    [ERROR] {error_code}: {error_message}", file=sys.stderr)
 
         if error_code == 'ResourceNotFoundException':
             # Model doesn't exist with this prefix - try next prefix
+            if debug:
+                print(f"    [RESULT] ResourceNotFoundException - model not found, trying next prefix", file=sys.stderr)
             return None
         elif error_code == 'ValidationException':
             # Check if it's a "model not found" type validation error
@@ -138,27 +153,53 @@ def test_model_with_prefix(bedrock_client, model_id, prefix="", strict=False):
                 'no model named',
                 'model \'',  # Often followed by model name
             ]
-            if any(pattern in error_message for pattern in not_found_patterns):
+            if any(pattern in error_message_lower for pattern in not_found_patterns):
+                if debug:
+                    print(f"    [RESULT] ValidationException with 'not found' pattern - rejecting prefix", file=sys.stderr)
+                return None
+            # In strict mode, ValidationException is more suspect - could be wrong prefix
+            if strict:
+                if debug:
+                    print(f"    [RESULT] ValidationException in strict mode (streaming) - might be wrong prefix, skipping", file=sys.stderr)
                 return None
             # Otherwise it's probably just our test payload format - model exists
+            if debug:
+                print(f"    [RESULT] ValidationException (non-strict) - assuming model exists", file=sys.stderr)
             return test_model_id
         elif error_code == 'AccessDeniedException':
             # Model exists but no access - count it as working for config
+            if debug:
+                print(f"    [RESULT] AccessDeniedException - model exists but no access (OK for config)", file=sys.stderr)
             return test_model_id
         elif error_code == 'ThrottlingException':
             # Throttled but model exists
+            if debug:
+                print(f"    [RESULT] ThrottlingException - model exists but throttled (OK)", file=sys.stderr)
             return test_model_id
         elif error_code == 'ModelStreamingNotSupportedException':
             # Model exists but doesn't support streaming - still valid
+            if debug:
+                print(f"    [RESULT] ModelStreamingNotSupportedException - model exists but no streaming", file=sys.stderr)
             return test_model_id
         else:
-            # Other errors - check message for "not found" patterns
-            if 'not found' in error_message or 'does not exist' in error_message:
+            # Other errors - be more strict in strict mode
+            if 'not found' in error_message_lower or 'does not exist' in error_message_lower:
+                if debug:
+                    print(f"    [RESULT] Other error with 'not found' pattern - rejecting", file=sys.stderr)
                 return None
-            # If no "not found" pattern, assume model exists but request had issues
+            if strict:
+                # In strict mode, unknown errors = model probably doesn't work
+                if debug:
+                    print(f"    [RESULT] Other error in strict mode - rejecting to be safe", file=sys.stderr)
+                return None
+            # In normal mode, be lenient
+            if debug:
+                print(f"    [RESULT] Other error (non-strict) - assuming model exists but request failed", file=sys.stderr)
             return test_model_id
     except Exception as e:
         # Any other error - skip
+        if debug:
+            print(f"    [EXCEPTION] {type(e).__name__}: {e}", file=sys.stderr)
         return None
 
 
@@ -192,7 +233,7 @@ def filter_models(models, ignore_list):
     return filtered
 
 
-def find_working_models(models, bedrock_runtime_client, verbose=False, strict=False):
+def find_working_models(models, bedrock_runtime_client, verbose=False, strict=False, debug=False):
     """
     Test each model with different prefixes and return list of working model IDs.
     If strict=True, use streaming to validate (like LibreChat does).
@@ -207,7 +248,7 @@ def find_working_models(models, bedrock_runtime_client, verbose=False, strict=Fa
 
         # Try prefixes in order: us., global., no prefix
         for prefix in ['us.', 'global.', '']:
-            working_id = test_model_with_prefix(bedrock_runtime_client, model_id, prefix, strict=strict)
+            working_id = test_model_with_prefix(bedrock_runtime_client, model_id, prefix, strict=strict, debug=debug)
             if working_id:
                 if verbose:
                     prefix_str = f"with prefix '{prefix}'" if prefix else "without prefix"
@@ -254,6 +295,11 @@ def main():
         help='Use streaming to validate models (like LibreChat does) - slower but more accurate'
     )
     parser.add_argument(
+        '--debug',
+        action='store_true',
+        help='Show detailed error messages and testing information for each model'
+    )
+    parser.add_argument(
         '--format',
         choices=['env', 'list', 'yaml'],
         default='env',
@@ -293,7 +339,7 @@ def main():
     )
 
     # Find working models
-    working_models = find_working_models(filtered_models, bedrock_runtime, args.verbose, args.strict)
+    working_models = find_working_models(filtered_models, bedrock_runtime, args.verbose, args.strict, args.debug)
 
     if args.verbose:
         print("", file=sys.stderr)
@@ -309,7 +355,7 @@ def main():
             # Check if model already has a prefix
             if first_model.startswith('us.') or first_model.startswith('global.'):
                 # Already has prefix, test as-is
-                test_id = test_model_with_prefix(bedrock_runtime, first_model, '', strict=args.strict)
+                test_id = test_model_with_prefix(bedrock_runtime, first_model, '', strict=args.strict, debug=args.debug)
                 if test_id:
                     first_working_models.append(test_id)
                 elif args.verbose:
@@ -318,7 +364,7 @@ def main():
                 # No prefix, try different prefixes
                 first_model_working = None
                 for prefix in ['us.', 'global.', '']:
-                    test_id = test_model_with_prefix(bedrock_runtime, first_model, prefix, strict=args.strict)
+                    test_id = test_model_with_prefix(bedrock_runtime, first_model, prefix, strict=args.strict, debug=args.debug)
                     if test_id:
                         first_model_working = test_id
                         break
