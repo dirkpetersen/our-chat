@@ -48,12 +48,9 @@ export AWS_DEFAULT_REGION=<region>
 docker compose -f ~/LibreChat/deploy-compose-ourchat.yml up -d
 docker compose -f ~/LibreChat/deploy-compose-ourchat.yml down
 
-# Update LibreChat
-cd ~/LibreChat
-docker compose -f deploy-compose-ourchat.yml down
-git pull
-docker compose -f deploy-compose-ourchat.yml pull
-docker compose -f deploy-compose-ourchat.yml up -d
+# Update LibreChat (preferred - use the update script in ~/bin)
+~/bin/update-librechat.sh
+# Logs written to ~/.logs/librechat-update.log
 
 # Enable debug logging
 vi ~/.env  # Set DEBUG_LOGGING=true
@@ -65,20 +62,54 @@ docker compose -f ~/LibreChat/deploy-compose-ourchat.yml up  # without -d to see
 ~/our-chat/purge_old_messages.py
 ```
 
+### ~/bin/update-librechat.sh
+The `ochat` user has an update script at `~/bin/update-librechat.sh` (not in this repo). It performs a full update cycle with logging and verification:
+1. Validates running as non-root user in the `docker` group
+2. `docker compose down` → `git pull` → `docker compose pull` → `docker compose up -d`
+3. Waits 5 seconds then verifies containers show `Up` status
+4. Prunes **all** unused Docker images (`docker image prune -a --force`) to reclaim disk
+5. Logs all steps with timestamps to `~/.logs/librechat-update.log`
+
+**Note**: Uses `error_exit` on any failure — the update halts rather than leaving containers in a partial state.
+
+### ochat Crontab
+```cron
+@reboot /usr/bin/docker compose -f /home/ochat/LibreChat/deploy-compose-ourchat.yml up -d
+22 2 * * * "/home/ochat/our-chat/purge_old_messages.py" > ~/purge_old_messages.log 2>&1
+
+# first saturday night every month, 5am PT, 1PM UTC
+#5 13 * * 6 [ $(date +\%d) -le 7 ] && /home/ochat/bin/update-ochat-and-cert.sh > ~/update-ochat-and-cert.log 2>&1
+
+#33 3 * * * "/home/ochat/bin/update-librechat.sh"
+```
+
+The last two entries are kept commented out — enable them only when automated updates are appropriate for the deployment:
+- `~/bin/update-ochat-and-cert.sh`: runs the first Saturday of each month at 5am PT, combines a LibreChat update with SSL certificate renewal
+- `~/bin/update-librechat.sh`: daily at 3:33am; commented because unattended nightly updates may not be appropriate in all environments
+
+### ~/bin/update-ochat-and-cert.sh
+Monthly cert renewal + update script (not in this repo, belongs at `~/bin/update-ochat-and-cert.sh`). Currently misplaced at `~/update-ochat-and-cert.sh` — should be moved:
+```bash
+mv ~/update-ochat-and-cert.sh ~/bin/
+```
+
+What it does: `docker compose down` → `git pull` → `docker compose pull` → **`sudo certbot renew --quiet`** → `docker compose up -d`
+
+Unlike `update-librechat.sh`, this script has no error handling or logging — failures are only captured if the cron job redirects output. Requires the `ochat` user to have passwordless sudo for `/usr/bin/certbot`.
+
 ## Key Configuration Files
 
 ### .env.ochat (template copied to ~/.env)
-- Primary configuration copied to ~/LibreChat/.env during installation
+- Primary configuration copied to ~/LibreChat/.env during installation via `envsubst` - `${AWS_ACCESS_KEY_ID}`, `${AWS_SECRET_ACCESS_KEY}`, `${AWS_DEFAULT_REGION}` are expanded from shell environment at install time
 - AWS Bedrock credentials: `BEDROCK_AWS_ACCESS_KEY_ID`, `BEDROCK_AWS_SECRET_ACCESS_KEY`, `BEDROCK_AWS_DEFAULT_REGION`
 - LDAP settings: `LDAP_URL`, `LDAP_BIND_DN`, `LDAP_SEARCH_FILTER`, etc.
-- Security tokens: `CREDS_KEY`, `CREDS_IV`, `JWT_SECRET`, `JWT_REFRESH_SECRET`, `MEILI_MASTER_KEY`
+- Security tokens: `CREDS_KEY`, `CREDS_IV`, `JWT_SECRET`, `JWT_REFRESH_SECRET`, `MEILI_MASTER_KEY` — the values in `.env.ochat` are **examples only** and must be regenerated
 - Generate tokens at: https://www.librechat.ai/toolkit/creds_generator
-- install-librechat.sh expands environment variables when copying to LibreChat
 
 ### librechat.yaml
-- LibreChat-specific configuration (version 1.1.7)
+- LibreChat-specific configuration
 - Terms of service modal with usage policy
-- Registration restrictions (allowedDomains: oregonstate.edu)
+- Registration restrictions (allowedDomains: university.edu)
 - Bedrock endpoint configuration (streamRate, titleModel, availableRegions)
 - Custom endpoints for on-prem LLMs (Llama-CPP examples commented out)
 - File upload limits
@@ -98,15 +129,40 @@ docker compose -f ~/LibreChat/deploy-compose-ourchat.yml up  # without -d to see
 Main installation script that:
 1. Installs Docker Compose plugin if needed
 2. Clones LibreChat from GitHub to ~/LibreChat
-3. Copies config files from ~/ to ~/LibreChat/
-4. Activates SSL certificates (Certbot or custom)
-5. Sets up cron jobs:
+3. Creates `deploy-compose-ourchat.yml` by deriving it from LibreChat's `deploy-compose.yml` via `sed` (not in this repo): exposes MongoDB port 27018, adds SSL cert volume mount, switches nginx config to `nginx-ourchat.conf`
+4. Copies config files from ~/ to ~/LibreChat/
+5. Activates SSL certificates (Certbot or custom)
+6. Sets up cron jobs:
    - `@reboot` - auto-start LibreChat
    - `22 2 * * *` - daily purge of old messages
-6. Creates systemd user service for dev mode (librechat-backend.service)
-7. Installs AWS CLI v2 if not present
+   - (commented) monthly cert renewal + update, and daily `update-librechat.sh` — see [ochat Crontab](#ochat-crontab)
+7. Creates systemd user service for dev mode (librechat-backend.service)
+8. Installs AWS CLI v2 if not present
 
-**Key behavior**: Environment variables in ~/.env are expanded when copied to ~/LibreChat/.env
+**Key behavior**: `envsubst` expands `${AWS_*}` environment variables when copying ~/.env to ~/LibreChat/.env; the expanded copy is also written back to ~/.env.
+
+### bedrock-model-list.py
+Utility to generate the `BEDROCK_AWS_MODELS` string for `.env` by live-testing which models are available in your AWS account. Tests each model with `us.`, `global.`, and no prefix to find the correct invocation form (matching what LibreChat uses).
+
+```bash
+# Basic usage - outputs BEDROCK_AWS_MODELS=... line
+python3 bedrock-model-list.py
+
+# Place specific models first, ignore embedding/image models, verbose output
+python3 bedrock-model-list.py \
+  --first "us.anthropic.claude-3-5-sonnet-20241022-v2:0" \
+  --ignore "amazon.titan-embed,amazon.titan-image,cohere.embed,stability" \
+  --region us-west-2 \
+  --verbose
+
+# Output formats: env (default), list, yaml
+python3 bedrock-model-list.py --format list
+
+# --loose skips streaming validation (faster but less accurate)
+# Default mode uses invoke_model_with_response_stream (strict) to match LibreChat behavior
+```
+
+Key logic: `--first` models are always included without testing (user pre-validates them); `--ignore` patterns do NOT apply to `--first` models. Handles per-provider payload formats (Anthropic, Meta, Amazon Nova, Amazon Titan, AI21, Cohere, Mistral).
 
 ### prepare-server.sh
 Server setup script (requires root/sudo) that:
@@ -128,7 +184,7 @@ Data retention script (runs daily at 2:22 AM via cron):
 
 ### tests/bedrock-test.py
 AWS Bedrock connectivity test:
-- Writes AWS credentials to ~/.aws/credentials and ~/.aws/config
+- Writes AWS credentials to ~/.aws/credentials and ~/.aws/config (only if [default] section doesn't already exist)
 - Lists available Bedrock models
 - Sends "Hello, world" test prompt to first available Anthropic model
 - Must succeed before installation
@@ -141,45 +197,23 @@ LDAP configuration validator:
 - Shows matched user's DN and attributes (displayName, memberOf)
 - Required before enabling LDAP authentication
 
-## File Structure
-
-```
-our-chat/
-├── .env.ochat              # Template for main configuration
-├── librechat.yaml          # LibreChat YAML config template
-├── nginx-ourchat.conf      # NGINX SSL reverse proxy config
-├── install-librechat.sh    # Main installation script
-├── prepare-server.sh       # Server preparation (root)
-├── purge_old_messages.py   # Data retention utility
-├── moin.py                 # Punderdome 3000 pun battle game (easter egg)
-├── tests/
-│   ├── bedrock-test.py    # AWS Bedrock connectivity test
-│   └── ldap-test.py       # LDAP configuration validator
-└── README.md              # Comprehensive documentation
-
-After installation creates:
-~/LibreChat/               # Cloned from github.com/danny-avila/LibreChat
-├── .env                   # Expanded from ~/.env
-├── librechat.yaml         # Copied from ~/
-├── client/nginx-ourchat.conf
-├── client/ssl/            # SSL certificates mounted here
-│   ├── our-chat.pem
-│   └── our-chat.pw
-└── deploy-compose-ourchat.yml  # Modified from deploy-compose.yml
-```
-
 ## Authentication & Authorization
 
-### LDAP/AD Integration (Phase 1 - JIT Provisioning)
-- Just-In-Time user creation on first login
-- LDAP_SEARCH_FILTER restricts access to security group members
-  - Example: `(&(sAMAccountName={{username}})(memberOf=CN=our-chat-users,...))`
-  - Returns 401 (AuthN) instead of 403 (AuthZ) for non-members - this is a known limitation
-- LDAP_LOGIN_USES_USERNAME=true allows login with username instead of full email
+### LDAP/AD Integration
+**Phase 1 (Pilot - through November 2026)**: Just-In-Time (JIT) user creation on first login. Access controlled by domain restriction in librechat.yaml and ToS acceptance. `LDAP_SEARCH_FILTER` uses simple username match: `(sAMAccountName={{username}})`
+
+**Phase 2 (Production - December 2026+)**: Optionally add group-based authorization. Example OR-logic filter for multiple groups:
+```
+(&(sAMAccountName={{username}})(|(memberOf=CN=ochat-all-users,...)(memberOf=CN=ochat-supercomputer-users,...)))
+```
+
+**Known limitation**: Non-members receive 401 (AuthN) instead of 403 (AuthZ) — upstream LibreChat issue.
+
+- `LDAP_LOGIN_USES_USERNAME=true` allows login with username instead of full email
 - Test with: `~/our-chat/tests/ldap-test.py <username>`
 
-### Email Domain Restriction (Alternative)
-If not using LDAP, set in librechat.yaml:
+### Email Domain Restriction (Alternative to LDAP)
+Set in librechat.yaml:
 ```yaml
 registration:
   allowedDomains:
@@ -198,10 +232,10 @@ registration:
 ### Model Access
 - Some models require explicit authorization per AWS account (EULA acceptance)
 - Test access with: `~/our-chat/tests/bedrock-test.py`
-- Configure available models in .env.ochat BEDROCK_AWS_MODELS
+- Use `bedrock-model-list.py` to auto-generate the correct `BEDROCK_AWS_MODELS` value
 - Unsupported models:
   - No streaming: ai21.j2-mid-v1
-  - No conversation history: ai21.j2-ultra-v1, cohere.command-text-v14
+  - No conversation history: ai21.j2-ultra-v1, cohere.command-text-v14, cohere.command-light-text-v14
 
 ### Multi-Region Support
 Optional in librechat.yaml:
@@ -301,10 +335,9 @@ Connect to HPC clusters or local GPUs via custom endpoints in librechat.yaml. Ex
 - SSL required (no plain HTTP operation)
 - Security headers in NGINX: HSTS, X-Content-Type-Options, Cache-Control
 - Encrypted volumes recommended for sensitive deployments
-- Consider pre-installing security software: SIEM forwarders, antivirus, IPS
 - LDAP credentials stored in plaintext in ~/.env (chmod 600)
 - AWS credentials stored in ~/.aws/ and ~/.env
-- Token generation required for CREDS_KEY, JWT_SECRET, etc.
+- Token generation required for CREDS_KEY, JWT_SECRET, etc. — `.env.ochat` values are placeholders
 
 ## Missing LibreChat Features
 
