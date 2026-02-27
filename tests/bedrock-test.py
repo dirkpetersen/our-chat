@@ -81,12 +81,21 @@ body = json.dumps({
   "anthropic_version": "bedrock-2023-05-31",
 })
 
+def invoke_test(model_id):
+    response = bedrock.invoke_model(body=body, modelId=model_id)
+    response_body = json.loads(response.get("body").read())
+    print(f"\nResponse to 'Hello, world' with model {model_id}:\n", response_body.get("content")[0]['text'], flush=True)
+
 try:
-    response = bedrock.invoke_model(body=body, modelId=amodel)
-    response_body = json.loads(response.get("body").read())    
-    print(f"\nResponse to 'Hello, world' with model {amodel}:\n",response_body.get("content")[0]['text'], flush=True)
+    invoke_test(amodel)
 except ClientError as e:
-    if e.response['Error']['Code'] == 'AccessDeniedException':
+    if e.response['Error']['Code'] == 'ValidationException' and 'inference profile' in str(e):
+        print(f"Model {amodel} requires an inference profile, retrying with us.{amodel}")
+        try:
+            invoke_test(f'us.{amodel}')
+        except ClientError as e2:
+            print(f"An error occurred with us.{amodel}: {e2}")
+    elif e.response['Error']['Code'] == 'AccessDeniedException':
         print(f"Access denied for model: {amodel}")
         print("You must request access to this model through the AWS console before you can use it.")
     else:
