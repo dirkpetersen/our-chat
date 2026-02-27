@@ -104,10 +104,10 @@ cp ~/our-chat/nginx-ourchat.conf ~/nginx-ourchat.conf
 
 ## <a name='AWSconnectivity'></a>AWS connectivity
 
-Export the AWS credentials and region of the Bedrock service account (the one that has only the AmazonBedrockFullAccess policy attached) to environment variables, go to the terminal of another computer that has the right credentials configured, and paste these 4 commands into the terminal to generate the export statements below (You can change the AWS_PROFILE environment variable to something else if you are working with a different AWS profile, e.g such as `bedrock`):
+Export the AWS credentials and region of the Bedrock service account (the one that has only the AmazonBedrockFullAccess policy attached) to environment variables, go to the terminal of another computer that has the right credentials configured, and paste these 4 commands into the terminal to generate the export statements below:
 
 ```
-export AWS_PROFILE="default"
+export AWS_PROFILE="bedrock"
 echo -e "\nexport AWS_ACCESS_KEY_ID=$(aws configure get aws_access_key_id)"
 echo -e "export AWS_SECRET_ACCESS_KEY=$(aws configure get aws_secret_access_key)"
 echo -e "export AWS_DEFAULT_REGION=$(aws configure get region)"

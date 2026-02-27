@@ -24,24 +24,24 @@ def write_aws_credentials(region, access_key, secret_key):
     if os.path.exists(config_file):
         config_config.read(config_file)
 
-    # Check if [default] already exists in credentials
-    if 'default' not in credentials_config:
-        credentials_config['default'] = {
+    # Check if [bedrock] already exists in credentials
+    if 'bedrock' not in credentials_config:
+        credentials_config['bedrock'] = {
             'aws_access_key_id': access_key,
             'aws_secret_access_key': secret_key
         }
         with open(credentials_file, 'w') as f:
             credentials_config.write(f)
-        print(f"Written to {credentials_file}: AWS credentials for [default]")
+        print(f"Written to {credentials_file}: AWS credentials for [bedrock]")
 
-    # Check if [default] already exists in config
-    if 'default' not in config_config:
-        config_config['default'] = {
+    # Check if [profile bedrock] already exists in config
+    if 'profile bedrock' not in config_config:
+        config_config['profile bedrock'] = {
             'region': region
         }
         with open(config_file, 'w') as f:
             config_config.write(f)
-        print(f"Written to {config_file}: AWS region configuration for [default]")
+        print(f"Written to {config_file}: AWS region configuration for [profile bedrock]")
 
 # Use environment variables for region, access key, and secret key
 aws_region = os.getenv('AWS_DEFAULT_REGION') or os.getenv('AWS_REGION')
@@ -59,7 +59,8 @@ else:
 
 # After creds are verified we are ready test Bedrock
 
-br = boto3.client(service_name="bedrock")
+session = boto3.Session(profile_name='bedrock')
+br = session.client(service_name="bedrock")
 available_models = br.list_foundation_models()
 print('\nList of available models on AWS Bedrock:\n')
 amodel = None
@@ -73,7 +74,7 @@ if not amodel:
     print("\nNo Anthropic models found. Exiting.")
     exit(1)
 
-bedrock = boto3.client(service_name="bedrock-runtime")
+bedrock = session.client(service_name="bedrock-runtime")
 body = json.dumps({
   "max_tokens": 256,
   "messages": [{"role": "user", "content": "Hello, world"}],
