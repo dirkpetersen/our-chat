@@ -18,7 +18,7 @@ OurChat is an enterprise LLM chat system deployment wrapper for LibreChat, desig
 ### Installation & Setup
 ```bash
 # 1. Server preparation (as root or with sudo)
-curl https://raw.githubusercontent.com/dirkpetersen/our-chat/refs/heads/main/prepare-server.sh | bash
+curl https://raw.githubusercontent.com/dirkpetersen/our-chat/main/prepare-server.sh | bash
 
 # 2. After switching to ochat user (sudo su - ochat)
 cd ~

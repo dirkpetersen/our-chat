@@ -82,10 +82,10 @@ You don't need root access to the virtual server if your IT team can run the `pr
 
 ## <a name='PrepareServer'></a>Prepare Server 
 
-Run the [prepare-server.sh](https://raw.githubusercontent.com/dirkpetersen/our-chat/refs/heads/main/prepare-server.sh) script as root user to install docker and prepare the `ochat` user account. You can also start it as a normal user if you have requested the correct [sudo config](#i-dont-have-root-permissions). You will be prompted for the hostname incl. domainname (FQDN) of your system. Please enter it, if you want to use Let's Encrypt.
+Run the [prepare-server.sh](https://raw.githubusercontent.com/dirkpetersen/our-chat/main/prepare-server.sh) script as root user to install docker and prepare the `ochat` user account. You can also start it as a normal user if you have requested the correct [sudo config](#i-dont-have-root-permissions). You will be prompted for the hostname incl. domainname (FQDN) of your system. Please enter it, if you want to use Let's Encrypt.
 
 ```
-curl https://raw.githubusercontent.com/dirkpetersen/our-chat/refs/heads/main/prepare-server.sh?token=$(date +%s) | bash
+curl https://raw.githubusercontent.com/dirkpetersen/our-chat/main/prepare-server.sh | bash
 ```
 
 After the script has finished, switch to the ochat user with `sudo su - ochat` and continue with [Prepare install](#prepare-install).
