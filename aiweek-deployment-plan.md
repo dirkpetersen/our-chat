@@ -166,6 +166,17 @@ All tiers resolve to a single AD security group `ai-week-access`. LibreChat enfo
 
 ## 7. Network and Access Requirements
 
+### Known Instances
+
+| Instance | URL | Auth | External access | Notes |
+|----------|-----|------|-----------------|-------|
+| Production (AI Week target) | `dockerai1.onid.oregonstate.edu` | Duo OIDC | Yes — must be accessible through firewall | Target deployment for AI Week |
+| Previous demo | `ochat.arcs.oregonstate.edu` | LDAP | **No — internal network only** | Not suitable for AI Week; LDAP auth, no external access |
+
+Both instances are accessible to the application team engineers (Caleb Prime, Max Davensmith). `ochat.arcs.oregonstate.edu` can be used for configuration testing and reference but cannot serve event attendees on personal devices due to its firewall restriction and LDAP authentication.
+
+### Requirements
+
 - Public FQDN with valid SSL certificate (Let's Encrypt or enterprise cert)
 - Inbound TCP 443 open to all (or to campus network ranges if event is on-campus)
 - Outbound HTTPS from the server to Duo SSO endpoints and Azure AI Foundry endpoints
@@ -261,3 +272,5 @@ Modify LibreChat's `deploy-compose.yml`:
 | Service desk tooling for real-time group adds | Infrastructure | Portal, PowerShell delegation, or web form for Tiers 2 and 3 |
 | Session and token expiry tuning | Application team | Default 15-min session / 7-day refresh — review for event context |
 | Post-event data purge | Application team | Run message purge script manually or shorten retention window after event |
+| **ADA compliance evaluation** | Application team | Run LibreChat through an ADA/WCAG compliance scanner (e.g. axe, WAVE, or Deque) before or during AI Week to establish a baseline. If the deployment continues after AI Week, identified gaps become a remediation backlog. The application team is responsible for initiating this evaluation — results will determine whether modifications to LibreChat's UI are required before production. |
+| **OSU branding — color scheme** | Application team | Determine whether to modify LibreChat's UI to use OSU colors (orange/black) for AI Week. If yes, identify which CSS/theme variables to override and test on `ochat.arcs.oregonstate.edu` before the event. |
