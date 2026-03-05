@@ -1,16 +1,18 @@
-# AI Week OurChat Deployment Plan
+# AI Week LibreChat Deployment Plan
 
 ## 1. Purpose and Scope
 
-This document defines requirements and responsibilities for a temporary OurChat (LibreChat) deployment supporting AI Week — a multi-session public-facing event with open exhibit access, live sessions, and pre-registered participants. The deployment must be accessible from attendees' personal cell phones without VPN.
+This document defines requirements and responsibilities for a temporary [LibreChat](https://github.com/danny-avila/LibreChat) deployment supporting AI Week — a multi-session public-facing event with open exhibit access, live sessions, and pre-registered participants. The deployment must be accessible from attendees' personal cell phones without VPN.
 
-OurChat is a configuration and deployment wrapper around [LibreChat](https://github.com/danny-avila/LibreChat). This document covers requirements, the revised LLM provider strategy, the split-responsibility operating model, and a summary of all configuration changes made in this repo relative to upstream LibreChat.
+LibreChat is the core application. The [our-chat](https://github.com/dirkpetersen/our-chat) repository is an optional helper that provides configuration templates, install scripts, and utilities for deploying LibreChat in an enterprise context — it can be used as a starting point but is not required. Teams familiar with LibreChat's own documentation can deploy directly.
+
+This document covers requirements, the revised LLM provider strategy, the split-responsibility operating model, and a summary of recommended configuration changes relative to a default LibreChat installation.
 
 ---
 
 ## 2. Stakeholders and Responsibilities
 
-Three teams share responsibility. Boundaries are intentional — the ochat application account is the sole interface between infrastructure and the application layer.
+Three teams share responsibility. Boundaries are intentional — the `ochat` application account is the sole interface between infrastructure and the application layer.
 
 ### Infrastructure Team
 - OS provisioning, patching, and reboots
@@ -19,11 +21,11 @@ Three teams share responsibility. Boundaries are intentional — the ochat appli
 - Cloud account management (Azure subscription, Azure AI Foundry deployments)
 - Active Directory — creating and managing the `ai-week-access` security group and any child groups
 
-### OurChat Application Team (ochat user)
+### Application Team (ochat user)
 Operates entirely under the `ochat` service account. Responsibilities:
-- LibreChat installation, updates, and configuration (`~/our-chat/`, `~/LibreChat/`)
-- Managing `.env`, `librechat.yaml`, `nginx-ourchat.conf`
-- Docker Compose lifecycle (`~/bin/update-librechat.sh`)
+- LibreChat installation, updates, and configuration
+- Managing `.env`, `librechat.yaml`, `nginx.conf`
+- Docker Compose lifecycle
 - Model endpoint configuration (Azure AI Foundry keys, HuangComplex endpoint)
 - RAG and data retention configuration
 
@@ -62,7 +64,7 @@ The consolidated strategy directly supports the AI Week demonstration goal: show
 ## 4. Authentication and Authorization
 
 ### Authentication — Duo OIDC
-Replace LDAP with Duo SSO as an OpenID Connect (OIDC) provider. LibreChat's built-in OIDC support handles this without code changes. Duo issues Duo Push to the user's phone as the MFA step, satisfying the mobile-first access requirement.
+Duo SSO acts as an OpenID Connect (OIDC) provider. LibreChat's built-in OIDC support handles this without code changes. Duo issues Duo Push to the user's phone as the MFA step, satisfying the mobile-first access requirement.
 
 **Infrastructure team delivers**: Duo SSO generic OIDC application with redirect URI `https://<fqdn>/oauth/openid/callback`, client ID, client secret, issuer URL, and groups claim configured.
 
@@ -94,10 +96,10 @@ All tiers resolve to a single AD security group `ai-week-access`. LibreChat enfo
 
 ## 6. RAG Configuration
 
-The RAG (Retrieval Augmented Generation) pipeline has been optimized in this deployment relative to LibreChat defaults:
+The RAG (Retrieval Augmented Generation) pipeline recommended settings relative to LibreChat defaults:
 
-| Parameter | LibreChat default | OurChat setting | Rationale |
-|-----------|------------------|-----------------|-----------|
+| Parameter | LibreChat default | Recommended | Rationale |
+|-----------|------------------|-------------|-----------|
 | `EMBEDDINGS_PROVIDER` | openai | `bedrock` | Uses AWS Bedrock for embeddings, no OpenAI dependency |
 | `EMBEDDINGS_MODEL` | text-embedding-3-small | `amazon.titan-embed-text-v2:0` | Current-generation Titan embedding model |
 | `CHUNK_SIZE` | 1500 | `5000` | Larger chunks preserve more context per retrieval hit |
@@ -108,71 +110,61 @@ The RAG (Retrieval Augmented Generation) pipeline has been optimized in this dep
 
 ---
 
-## 7. OurChat Configuration Changes vs Base LibreChat
+## 7. Configuration Reference
 
-This section documents every substantive change made in OurChat relative to a fresh LibreChat installation. This is the authoritative delta for anyone comparing the two.
+This section documents recommended configuration changes relative to a default LibreChat installation. These settings are reflected in the `our-chat` helper repo templates but can be applied directly to any LibreChat deployment.
 
 ### `librechat.yaml`
 
-| Change | LibreChat default | OurChat value |
-|--------|------------------|---------------|
+| Setting | LibreChat default | Recommended |
+|---------|------------------|-------------|
 | Schema version | varies | `1.3.4` |
-| Terms of service modal | disabled | Enabled — custom university acceptable use policy, mandatory acceptance before first use |
-| Privacy policy link | none | Set to `university.edu/acceptable-use` |
-| Registration `allowedDomains` | none | `university.edu` (restricts self-registration to university email addresses) |
-| Registration `socialLogins` | all enabled | `[]` — disabled; authentication is LDAP or OIDC only |
+| Terms of service modal | disabled | Enabled — custom acceptable use policy, mandatory acceptance before first use |
+| Privacy policy link | none | Set to institution's acceptable use URL |
+| Registration `allowedDomains` | none | Institution email domain (restricts self-registration) |
+| Registration `socialLogins` | all enabled | `[]` — OIDC is the only login path |
 | Bedrock `streamRate` | default | `75` — throttle to reduce token rate pressure |
-| Bedrock `titleModel` | none | `us.anthropic.claude-haiku-4-5-20251001-v1:0` — uses inference profile prefix |
-| File upload limit (default endpoint) | LibreChat default | 10 files, 50 MB total |
+| Bedrock `titleModel` | none | A fast/cheap model with inference profile prefix, e.g. `us.anthropic.claude-haiku-*` |
+| File upload limit (default) | LibreChat default | 10 files, 50 MB total |
 | File upload limit (Bedrock) | LibreChat default | 25 files, 50 MB total |
-| Custom on-prem endpoints | none | Commented examples for Llama-CPP A40 and A100 (HuangComplex pattern) |
+| Custom on-prem endpoints | none | Add HuangComplex vLLM/Ollama as a `custom` endpoint block |
 
-### `.env` / `.env.ochat`
+### `.env`
 
-| Parameter | LibreChat default | OurChat value | Rationale |
-|-----------|------------------|---------------|-----------|
-| `ENDPOINTS` | openAI | `bedrock,google` | Scoped to active providers only |
-| `BEDROCK_AWS_MODELS` | all known models | Curated list of 6 current-generation models with `global.`/`us.` inference profile prefixes | Prevents obsolete or unsupported models from appearing |
+| Parameter | LibreChat default | Recommended | Rationale |
+|-----------|------------------|-------------|-----------|
+| `ENDPOINTS` | openAI | Scoped to active providers only | Prevents unused/unconfigured endpoints from appearing |
+| `BEDROCK_AWS_MODELS` | all known models | Curated list with `global.`/`us.` inference profile prefixes | Prevents obsolete or unsupported models from appearing |
 | `GOOGLE_MODELS` | example list | Current Gemini 3.x and 2.5 model IDs | Updated to current generation |
-| `GEMINI_IMAGE_MODEL` | not set | `gemini-3-pro-image-preview,gemini-2.5-flash-image` | Enables image generation via Gemini |
-| `GOOGLE_TITLE_MODEL` | gemini-pro | `gemini-2.5-flash-lite` | Faster/cheaper model for conversation title generation |
+| `GEMINI_IMAGE_MODEL` | not set | Current Gemini image model IDs | Enables image generation via Gemini |
+| `GOOGLE_TITLE_MODEL` | gemini-pro | A fast/cheap Gemini model | Cheaper model for conversation title generation |
 | `EMBEDDINGS_PROVIDER` | openai | `bedrock` | No OpenAI dependency |
 | `EMBEDDINGS_MODEL` | text-embedding-3-small | `amazon.titan-embed-text-v2:0` | Current-generation Bedrock embedding model |
 | `CHUNK_SIZE` | 1500 | `5000` | Larger RAG context chunks |
 | `RAG_USE_FULL_CONTEXT` | false | `true` | Full chunk context passed to model |
 | `DEBUG_PLUGINS` | true | `false` | Reduce log noise in production |
-| `DISABLE_COMPRESSION` | false (Express compresses) | `true` | NGINX handles compression; avoid double-compression |
-| `APP_TITLE` | "My LibreChat" | `"University Chat"` | Deployment branding |
-| `BEDROCK_AWS_SESSION_TOKEN` | not present | Commented stub | Enables IAM role / temporary credential support |
-| `LDAP_STARTTLS` | not present | Commented stub | Available for enabling TLS upgrade on LDAP connections |
-| `GOOGLE_CLOUD_PROJECT` | not present | Commented stub in Google section | Required for Vertex AI (if switching from AI Studio) |
-| `ALLOW_SOCIAL_LOGIN` | false | `false` | Kept off; OIDC is configured separately via `OPENID_*` |
-| `ALLOW_PASSWORD_RESET` | true | `false` | LDAP/OIDC deployments have no local passwords to reset |
-| BingAI section | present | Removed | BingAI removed from LibreChat |
+| `DISABLE_COMPRESSION` | false | `true` | When NGINX is in front, avoid double-compression |
+| `APP_TITLE` | "My LibreChat" | Institution/event name | Deployment branding |
+| `ALLOW_PASSWORD_RESET` | true | `false` | OIDC deployments have no local passwords to reset |
+| `ALLOW_SOCIAL_LOGIN` | false | `true` (with `OPENID_*` configured) | Enables Duo OIDC login button |
+| `ALLOW_REGISTRATION` | true | `false` | All users come through OIDC; no self-registration |
+| `OPENID_REQUIRED_ROLE` | not set | `ai-week-access` | Gates login to AD group members |
+| `OPENID_REQUIRED_ROLE_PARAMETER_PATH` | not set | `groups` | Reads group membership from OIDC groups claim |
+| BingAI section | present | Remove | BingAI removed from current LibreChat |
 
-### `nginx-ourchat.conf`
-Custom NGINX configuration replacing LibreChat's default. Key additions:
+### NGINX
+Replace LibreChat's default nginx config with one that includes:
 - TLS 1.2/1.3 only, Mozilla intermediate cipher suite
 - HSTS, `X-Content-Type-Options`, `Cache-Control` security headers
 - HTTP → HTTPS redirect on port 80
 - Client max body size 25 MB (for file uploads)
-- SSL certificate from enterprise PKCS12 or Let's Encrypt (two commented options)
+- SSL certificate from enterprise PKCS12 or Let's Encrypt
 
-### `deploy-compose-ourchat.yml` (generated at install time, not in repo)
-Derived from LibreChat's `deploy-compose.yml` by `install-librechat.sh` via `sed`:
-- MongoDB external port exposed as `27018` (for maintenance access)
-- SSL certificate volume mounted into NGINX container
-- NGINX config replaced with `nginx-ourchat.conf`
-
-### `tests/bedrock-test.py`
-- Writes AWS credentials to `[bedrock]` profile (not `[default]`)
-- Uses `boto3.Session(profile_name='bedrock')`
-- Auto-retries model invocation with `us.{model_id}` inference profile prefix if the direct call returns a `ValidationException` about inference profiles
-
-### `purge_old_messages.py`
-- Connects to MongoDB on port `27018` (external host port)
-- Deletes messages and files older than 180 days
-- Runs daily at 2:22 AM via cron
+### Docker Compose
+Modify LibreChat's `deploy-compose.yml`:
+- Expose MongoDB on an external port (e.g. `27018`) for maintenance access
+- Mount SSL certificate directory into the NGINX container
+- Point NGINX to the custom config file
 
 ---
 
@@ -187,4 +179,4 @@ Derived from LibreChat's `deploy-compose.yml` by `install-librechat.sh` via `sed
 | `ai-week-access` AD group | Infrastructure | Create group; confirm Duo sync and groups claim format in ID token |
 | Service desk tooling for real-time group adds | Infrastructure | Portal, PowerShell delegation, or web form for Tiers 2 and 3 |
 | Session and token expiry tuning | Application team | Default 15-min session / 7-day refresh — review for event context |
-| Post-event data purge | Application team | Run `purge_old_messages.py` manually or shorten retention window after event |
+| Post-event data purge | Application team | Run message purge script manually or shorten retention window after event |
