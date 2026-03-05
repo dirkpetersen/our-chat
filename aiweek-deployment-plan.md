@@ -56,12 +56,20 @@ This deployment is intended to serve AI Week as a bounded event, while being arc
 - The system is reachable under a designated event URL
 - Access is restricted to a defined user base (pre-registrants, session attendees, and exhibit walk-bys — see Section 4)
 
-**After AI Week**
-- The event URL may change if the deployment moves to a permanent production address
-- Access policy is under evaluation: the working assumption is broader general availability, subject to the cost monitoring outcome
-- The decision to continue or discontinue rests on two factors:
-  - **Cost**: overall spend must be within acceptable bounds; cost monitoring infrastructure must be in place before general availability is opened
-  - **Demand and policy**: organizational readiness to support an ongoing service
+> **At the conclusion of AI Week, a formal decision point will be reached: continue operating the deployment in production, or decommission it.** This is not an automatic continuation — it is an explicit go/no-go decision. If the decision is to continue, the deployment will transition with a **different URL** and a **different authorization scheme** (broader access, replacing the event-specific AD group with a production identity model). Both the URL and access policy changes must be planned and resourced before AI Week ends, not after.
+
+**After AI Week — if continued**
+- The system moves to a permanent production URL (the event URL is retired or redirected)
+- The `ai-week-access` AD group is replaced by a production authorization model appropriate to the target user population (open enrollment, department-based groups, or institution-wide access)
+- Cost monitoring data collected during AI Week informs the scale and quota configuration for production
+- The decision to proceed is contingent on:
+  - **Cost**: token consumption during AI Week must demonstrate the deployment is within acceptable budget bounds
+  - **Demand and policy**: organizational readiness to support an ongoing service and communicate it to the user base
+
+**After AI Week — if decommissioned**
+- Containers are stopped, data purged per retention policy
+- Azure AI Foundry deployments and API keys are revoked
+- The `ai-week-access` AD group is archived
 
 The deployment should therefore be treated as production-grade from day one — not a throwaway prototype. Configuration, security, and operational practices must be consistent with a system that may run indefinitely.
 
