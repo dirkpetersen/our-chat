@@ -1,6 +1,6 @@
 # AI Week LibreChat Deployment Plan
 
-## Goals
+## 1. Goals
 
 ### Goal: Single Entry Point to OSU's Hybrid AI Inference Infrastructure
 
@@ -48,7 +48,7 @@ The system must be reachable from personal cell phones without VPN or any specia
 
 ---
 
-## Deployment Lifecycle
+## 2. Deployment Lifecycle
 
 This deployment is intended to serve AI Week as a bounded event, while being architected from the start so that a continuation decision can be made immediately after without requiring a rebuild.
 
@@ -75,7 +75,7 @@ The deployment should therefore be treated as production-grade from day one — 
 
 ---
 
-## 1. Purpose and Scope
+## 3. Purpose and Scope
 
 This document defines requirements and responsibilities for a temporary [LibreChat](https://github.com/danny-avila/LibreChat) deployment supporting AI Week — a multi-session public-facing event with open exhibit access, live sessions, and pre-registered participants. The deployment must be accessible from attendees' personal cell phones without VPN.
 
@@ -85,7 +85,7 @@ This document covers requirements, the revised LLM provider strategy, the split-
 
 ---
 
-## 2. Stakeholders and Responsibilities
+## 4. Stakeholders and Responsibilities
 
 Three teams share responsibility. Boundaries are intentional — the `ochat` application account is the sole interface between infrastructure and the application layer.
 
@@ -111,13 +111,13 @@ Operates entirely under the `ochat` service account. Responsibilities:
 The application team may `sudo su - ochat`, install OS packages required by the application, and excute reboots. All other OS-level changes remain with the infrastructure team.
 
 ### Service Desk
-- Owns the authorization process for Tiers 2 and 3 (see Section 4)
+- Owns the authorization process for Tiers 2 and 3 (see Section 6)
 - Adds attendees to AD groups in real time during sessions and at the exhibit desk
 - Does not manage infrastructure or application configuration
 
 ---
 
-## 3. LLM Provider Strategy
+## 5. LLM Provider Strategy
 
 ### Original Plan
 The initial architecture proposed routing users to multiple independent cloud providers:
@@ -132,7 +132,7 @@ To simplify credential management, reduce firewall exposure, and present a unifi
 - **Anthropic** — Claude Opus 4.6, Claude Sonnet 4.6, Claude Haiku 4.5
 - **OpenAI** — GPT-5.3 (or current flagship at deployment time)
 - **xAI** — Grok 4 (or current flagship at deployment time)
-- **Google** — TBD (At this time we are exploring options fo making Gemini available via https://aistudio.google.com without the overhead of Google Cloud accounts and Google Vertex AI management)
+- **Google** — TBD. We are exploring making Gemini available via [Google AI Studio](https://aistudio.google.com) without the overhead of Google Cloud accounts and Vertex AI management. **An open question for this path is whether Azure AI Foundry — or Google AI Studio — provides access to models with 1 million token context windows, which is a requirement for the high-performance RAG goal (see Section 1). This must be confirmed before finalizing the provider plan.**
 
 **HuangComplex** (local Nvidia DGX) remains as the on-premises provider for locally-hosted open-source models, demonstrating the hybrid cloud + on-prem capability that is a key goal of the event.
 
@@ -141,7 +141,7 @@ The consolidated strategy directly supports the AI Week demonstration goal: show
 
 ---
 
-## 4. Authentication and Authorization
+## 6. Authentication and Authorization
 
 ### Authentication — Duo OIDC
 Duo SSO acts as an OpenID Connect (OIDC) provider. LibreChat's built-in OIDC support handles this without code changes. Duo issues Duo Push to the user's phone as the MFA step, satisfying the mobile-first access requirement.
@@ -164,7 +164,7 @@ All tiers resolve to a single AD security group `ai-week-access`. LibreChat enfo
 
 ---
 
-## 5. Network and Access Requirements
+## 7. Network and Access Requirements
 
 - Public FQDN with valid SSL certificate (Let's Encrypt or enterprise cert)
 - Inbound TCP 443 open to all (or to campus network ranges if event is on-campus)
@@ -174,7 +174,7 @@ All tiers resolve to a single AD security group `ai-week-access`. LibreChat enfo
 
 ---
 
-## 6. RAG Configuration
+## 8. RAG Configuration
 
 The RAG (Retrieval Augmented Generation) pipeline recommended settings relative to LibreChat defaults:
 
@@ -190,7 +190,7 @@ The RAG (Retrieval Augmented Generation) pipeline recommended settings relative 
 
 ---
 
-## 7. Configuration Reference
+## 9. Configuration Reference
 
 This section documents recommended configuration changes relative to a default LibreChat installation. These settings are reflected in the `our-chat` helper repo templates but can be applied directly to any LibreChat deployment.
 
@@ -248,7 +248,7 @@ Modify LibreChat's `deploy-compose.yml`:
 
 ---
 
-## 8. Open Items
+## 10. Open Items
 
 | Item | Owner | Notes |
 |------|-------|-------|
