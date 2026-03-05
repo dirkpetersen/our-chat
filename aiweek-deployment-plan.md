@@ -1,37 +1,21 @@
 # AI Week LibreChat Deployment Plan
 
-## Goals and Deployment Lifecycle
+## Goals
 
-This deployment has a dual mandate: serve AI Week as a bounded event, while being architected from the start so that a continuation decision can be made immediately after the event without requiring a rebuild.
-
-### Primary Goal: Single Entry Point to OSU's Hybrid AI Inference Infrastructure
+### Goal: Single Entry Point to OSU's Hybrid AI Inference Infrastructure
 
 Oregon State University operates under two complementary mandates that together define a hybrid AI strategy: OSU is a **cloud-first organization**, and OSU is **mandated to operate a supercomputer**. These are not competing priorities — they are the two pillars of OSU's AI infrastructure posture.
 
-The primary goal of this deployment is to evaluate LibreChat as a **single unified entry point** that spans both pillars. Users should be able to access the full spectrum of OSU's AI inference capacity — commercial cloud models and on-premises HPC resources — through one interface, without needing to know or care where computation is happening. This matters because:
+The goal of this deployment is to evaluate LibreChat as a **single unified entry point** that spans both pillars. Users should be able to access the full spectrum of OSU's AI inference capacity — commercial cloud models and on-premises HPC resources — through one interface, without needing to know or care where computation is happening. This matters because:
 
 - Researchers and staff should not need separate accounts, tools, or workflows depending on whether a task is better suited to a cloud LLM or a locally-hosted model
 - IT should not need to operate multiple disconnected AI portals as the model landscape evolves
 - OSU's investment in supercomputing infrastructure (HuangComplex DGX) should be accessible to the same users who access cloud models, on equal footing in the same UI
 - As new models are deployed — whether in Azure AI Foundry, on Bedrock, on Google's infrastructure, or on HPC — they should be addable to a single platform without end-user retraining
 
-AI Week is the first public proof of concept for this strategy. The event demonstrates the hybrid model in front of a broad audience and generates the operational experience needed to evaluate whether this platform can scale to institution-wide use. Everything else in this document — the LLM provider choices, the RAG capabilities, the access model — serves this primary goal.
+AI Week is the first public proof of concept for this strategy. The event demonstrates the hybrid model in front of a broad audience and generates the operational experience needed to evaluate whether this platform can scale to institution-wide use. Everything else in this document — the LLM provider choices, the RAG capabilities, the access model — serves this goal.
 
-**During AI Week**
-- The system is reachable under a designated event URL
-- Access is restricted to a defined user base (pre-registrants, session attendees, and exhibit walk-bys — see Section 4)
-- The primary demonstration goal is a single interface accessing leading commercial LLMs from multiple providers plus a local on-premises model
-
-**After AI Week**
-- The event URL may change if the deployment moves to a permanent production address
-- Access policy is under evaluation: the working assumption is broader general availability, subject to the cost monitoring outcome
-- The decision to continue or discontinue rests on two factors:
-  - **Cost**: overall spend must be within acceptable bounds; cost monitoring infrastructure must be in place before general availability is opened
-  - **Demand and policy**: organizational readiness to support an ongoing service
-
-The deployment should therefore be treated as production-grade from day one — not a throwaway prototype. Configuration, security, and operational practices should be consistent with a system that may run indefinitely.
-
-### Goal: Superior RAG Capability
+### Goal: Improved RAG Capability
 
 A specific objective of this deployment is to demonstrate document analysis capabilities that go beyond what is available in standard enterprise AI plans such as Microsoft Copilot. The target capability is uploading and querying large document sets — on the order of 100 PDF files — within a single conversation.
 
@@ -44,6 +28,25 @@ Two complementary approaches make this possible:
 ### Goal: End-User Accessibility
 
 The system must be reachable from personal cell phones without VPN or any special network configuration. This is a hard requirement, not a convenience feature — it determines whether attendees can participate at all. The system must be exposed through the firewall on a public URL (or at minimum a URL reachable on the campus network from wireless devices). Internal-only access is not acceptable for this deployment.
+
+---
+
+## Deployment Lifecycle
+
+This deployment is intended to serve AI Week as a bounded event, while being architected from the start so that a continuation decision can be made immediately after without requiring a rebuild.
+
+**During AI Week**
+- The system is reachable under a designated event URL
+- Access is restricted to a defined user base (pre-registrants, session attendees, and exhibit walk-bys — see Section 4)
+
+**After AI Week**
+- The event URL may change if the deployment moves to a permanent production address
+- Access policy is under evaluation: the working assumption is broader general availability, subject to the cost monitoring outcome
+- The decision to continue or discontinue rests on two factors:
+  - **Cost**: overall spend must be within acceptable bounds; cost monitoring infrastructure must be in place before general availability is opened
+  - **Demand and policy**: organizational readiness to support an ongoing service
+
+The deployment should therefore be treated as production-grade from day one — not a throwaway prototype. Configuration, security, and operational practices must be consistent with a system that may run indefinitely.
 
 ---
 
