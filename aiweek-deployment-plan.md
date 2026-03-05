@@ -4,7 +4,7 @@
 
 ### Goal: Single Entry Point to OSU's Hybrid AI Inference Infrastructure
 
-Oregon State University operates under two complementary mandates that together define a hybrid AI strategy: OSU is a **cloud-first organization**, and OSU is **mandated to operate a supercomputer**. These are not competing priorities — they are the two pillars of OSU's AI infrastructure posture.
+Oregon State University operates under two complementary mandates that together define a hybrid AI strategy: OSU is a **cloud-first organization**, and OSU is **mandated to operate an on premises supercomputer**. These are not competing priorities — they are the two pillars of OSU's AI infrastructure posture.
 
 The goal of this deployment is to evaluate LibreChat as a **single unified entry point** that spans both pillars. Users should be able to access the full spectrum of OSU's AI inference capacity — commercial cloud models and on-premises HPC resources — through one interface, without needing to know or care where computation is happening. This matters because:
 
@@ -14,6 +14,23 @@ The goal of this deployment is to evaluate LibreChat as a **single unified entry
 - As new models are deployed — whether in Azure AI Foundry, on Bedrock, on Google's infrastructure, or on HPC — they should be addable to a single platform without end-user retraining
 
 AI Week is the first public proof of concept for this strategy. The event demonstrates the hybrid model in front of a broad audience and generates the operational experience needed to evaluate whether this platform can scale to institution-wide use. Everything else in this document — the LLM provider choices, the RAG capabilities, the access model — serves this goal.
+
+### Goal: Cost-Efficient AI Access at Scale
+
+Providing advanced AI capability to OSU's approximately 30,000 users through commercial subscription plans would be financially prohibitive. At a typical per-user cost of $20/month (e.g. Microsoft Copilot or comparable plans), institution-wide coverage would cost:
+
+> **30,000 users × $20/month = $600,000/month — $7,200,000/year**
+
+A token-based deployment such as LibreChat fundamentally changes this equation. Real-world usage in a large, heterogeneous user base is highly skewed: the majority of users will interact with AI tools lightly — a few queries per day or even per week — while a smaller number of power users account for the bulk of token consumption. Under a subscription model every user pays the same flat rate regardless of use. Under a token-based model, cost is directly proportional to actual consumption.
+
+A well-configured LibreChat deployment with strict per-user token quotas can realistically operate at **under $1,000/month** while still serving the full 30,000-user population, because:
+
+- Light users (the majority) consume negligible tokens and cost fractions of a cent per day
+- Heavy users are bounded by configurable daily or monthly token quotas
+- Model selection can be tuned — routing routine queries to cheaper models and reserving premium models for tasks that require them
+- On-premises HPC capacity (HuangComplex) can absorb a portion of demand at near-zero marginal cost
+
+This deployment will serve as the operational proof point for this cost model. Monitoring actual token consumption and per-user cost during and after AI Week will be essential data for justifying and sizing a production deployment.
 
 ### Goal: Improved RAG Capability
 
