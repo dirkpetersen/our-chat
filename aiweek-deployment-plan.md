@@ -173,10 +173,18 @@ All tiers resolve to a single AD security group `ai-week-access`. LibreChat enfo
 
 | Instance | URL | Auth | External access | Notes |
 |----------|-----|------|-----------------|-------|
-| Production (AI Week target) | `dockerai1.onid.oregonstate.edu` | Duo OIDC | Yes — must be accessible through firewall | Target deployment for AI Week |
+| Production (AI Week target) | `dockerai1.onid.oregonstate.edu` | Duo OIDC | Yes — must be accessible through firewall | Target deployment for AI Week; public-facing URL TBD (see below) |
 | Previous demo | `ochat.arcs.oregonstate.edu` | LDAP | **No — internal network only** | Not suitable for AI Week; LDAP auth, no external access |
 
 Both instances are accessible to the application team engineers (Caleb Prime, Max Davensmith). `ochat.arcs.oregonstate.edu` can be used for configuration testing and reference but cannot serve event attendees on personal devices due to its firewall restriction and LDAP authentication.
+
+### Public-Facing URL for AI Week
+
+The currently proposed public hostname is **`sandbox.ai.oregonstate.edu`**. However, the term *sandbox* is not well understood by non-English speakers and may create confusion about whether the system is production-ready or experimental — an important concern given the Goal: Cost-Efficient AI Access at Scale and the post-AI Week continuation decision.
+
+An alternative under consideration is **`test-chat.ai.oregonstate.edu`**, though this has the same limitation of implying a non-production context and has not yet been discussed with leadership.
+
+> **This hostname decision is unresolved and must be escalated to leadership before AI Week.** The chosen name will carry through to any post-AI Week production deployment (or be replaced by a different production URL at the decision point). A name that works for both the event and a potential long-term deployment is preferable to one that requires a URL change immediately after AI Week.
 
 ### Requirements
 
@@ -266,6 +274,7 @@ Modify LibreChat's `deploy-compose.yml`:
 
 | Item | Owner | Notes |
 |------|-------|-------|
+| **Public-facing hostname decision** | Leadership / Infrastructure | `sandbox.ai.oregonstate.edu` proposed but problematic for non-English speakers; `test-chat.ai.oregonstate.edu` suggested as alternative — neither confirmed. Must be resolved with leadership before AI Week. Ideally choose a name suitable for long-term production use to avoid a URL change at the post-event decision point. |
 | Azure AI Foundry subscription and model deployments | Infrastructure | Anthropic, OpenAI, xAI (Grok), and Google (TBD) models need to be deployed; API key and base URL required |
 | Context window sizes of Azure AI Foundry models | Application team | Confirm whether any Azure-hosted models offer 1M+ token context windows; if not, a direct Google AI Studio endpoint may be required for large-document RAG use cases |
 | Google/Gemini availability | Infrastructure / Application team | Confirm whether Gemini is available via Azure AI Foundry or requires a direct Google AI Studio connection; AI Studio is preferred to avoid Google Cloud account overhead |
