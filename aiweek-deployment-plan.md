@@ -29,8 +29,11 @@ A well-configured LibreChat deployment with strict per-user token quotas can rea
 - Heavy users are bounded by configurable daily or monthly token quotas
 - Model selection can be tuned — routing routine queries to cheaper models and reserving premium models for tasks that require them
 - On-premises HPC capacity (HuangComplex) can absorb a portion of demand at near-zero marginal cost
+- For any model that becomes heavily used, it may be more cost-efficient to host it on owned hardware than to continue paying per-token cloud rates — the unified platform architecture makes this transition transparent to end users, since the same interface serves both cloud and on-premises models
 
-This deployment will serve as the operational proof point for this cost model. Monitoring actual token consumption and per-user cost during and after AI Week will be essential data for justifying and sizing a production deployment.
+The crossover point where self-hosting beats cloud pricing depends on utilization rate, model size, and hardware amortization. A high-traffic model running continuously on owned GPU hardware can cost an order of magnitude less per token than the equivalent cloud API call. This is a long-term cost optimization lever that becomes available precisely because the platform is designed to route requests across heterogeneous backends — adding a self-hosted model is a configuration change, not a migration.
+
+This deployment will serve as the operational proof point for this cost model. Monitoring actual token consumption and per-user cost during and after AI Week will be essential data for justifying and sizing a production deployment, including identifying which models are candidates for on-premises hosting.
 
 ### Goal: Improved RAG Capability
 
