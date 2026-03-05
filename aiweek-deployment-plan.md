@@ -7,7 +7,7 @@ This deployment has a dual mandate: serve AI Week as a bounded event, while bein
 **During AI Week**
 - The system is reachable under a designated event URL
 - Access is restricted to a defined user base (pre-registrants, session attendees, and exhibit walk-bys — see Section 4)
-- The primary goal is demonstration: show that a single interface can access leading commercial LLMs from multiple providers plus a local on-premises model
+- The primary demonstration goal is a single interface accessing leading commercial LLMs from multiple providers plus a local on-premises model
 
 **After AI Week**
 - The event URL may change if the deployment moves to a permanent production address
@@ -18,13 +18,27 @@ This deployment has a dual mandate: serve AI Week as a bounded event, while bein
 
 The deployment should therefore be treated as production-grade from day one — not a throwaway prototype. Configuration, security, and operational practices should be consistent with a system that may run indefinitely.
 
+### Goal: Superior RAG Capability
+
+A specific objective of this deployment is to demonstrate document analysis capabilities that go beyond what is available in standard enterprise AI plans such as Microsoft Copilot. The target capability is uploading and querying large document sets — on the order of 100 PDF files — within a single conversation.
+
+Two complementary approaches make this possible:
+
+1. **High-performance RAG pipeline**: LibreChat's RAG API with large chunk sizes, full-context retrieval, and a high-quality embedding model enables multi-document search across an uploaded corpus. This is the default approach and works with any LLM backend.
+
+2. **Large context window models**: Models with context windows of 1 million tokens or more can ingest entire document sets directly without chunking, eliminating retrieval latency and approximation error. Google Gemini models are the primary candidates for this capability. **This is an open investigation item**: it must be confirmed whether Azure AI Foundry offers models with 1M+ token context windows, or whether a direct Google AI Studio connection is required to access this capability. If Azure AI Foundry does not provide it, this is a strong argument for retaining a direct Google endpoint alongside Azure.
+
+### Goal: End-User Accessibility
+
+The system must be reachable from personal cell phones without VPN or any special network configuration. This is a hard requirement, not a convenience feature — it determines whether attendees can participate at all. The system must be exposed through the firewall on a public URL (or at minimum a URL reachable on the campus network from wireless devices). Internal-only access is not acceptable for this deployment.
+
 ---
 
 ## 1. Purpose and Scope
 
 This document defines requirements and responsibilities for a temporary [LibreChat](https://github.com/danny-avila/LibreChat) deployment supporting AI Week — a multi-session public-facing event with open exhibit access, live sessions, and pre-registered participants. The deployment must be accessible from attendees' personal cell phones without VPN.
 
-LibreChat is the core application. The [our-chat](https://github.com/dirkpetersen/our-chat) repository is an optional helper that provides configuration templates, install scripts, and utilities for deploying LibreChat in an enterprise context — it can be used as a starting point but is not required. Teams familiar with LibreChat's own documentation can deploy directly.
+LibreChat is the core application. The [our-chat](https://github.com/dirkpetersen/our-chat) repository is an optional helper that provides configuration templates, install scripts, and utilities for deploying LibreChat in an enterprise context — it can be used as a starting point but is not required. Teams familiar with LibreChat's own documentation can deploy directly. It can be used as a template for a documented deployment process. 
 
 This document covers requirements, the revised LLM provider strategy, the split-responsibility operating model, and a summary of recommended configuration changes relative to a default LibreChat installation.
 
@@ -36,7 +50,7 @@ Three teams share responsibility. Boundaries are intentional — the `ochat` app
 
 ### Infrastructure Team
 - OS provisioning, patching, and reboots
-- Firewall rules and network routing
+- Firewall rules and network routing 
 - SSL certificate provisioning
 - Cloud account management (Azure subscription, Azure AI Foundry deployments)
 - Active Directory — creating and managing the `ai-week-access` security group and any child groups
@@ -49,7 +63,11 @@ Operates entirely under the `ochat` service account. Responsibilities:
 - Model endpoint configuration (Azure AI Foundry keys, HuangComplex endpoint)
 - RAG and data retention configuration
 
-The application team may `sudo su - ochat`, install OS packages required by the application, and request reboots. All other OS-level changes remain with the infrastructure team.
+#### Engineers
+- Primary Engineer: Caleb Prime 
+- Backup Engineer: Max Davensmith 
+
+The application team may `sudo su - ochat`, install OS packages required by the application, and excute reboots. All other OS-level changes remain with the infrastructure team.
 
 ### Service Desk
 - Owns the authorization process for Tiers 2 and 3 (see Section 4)
@@ -68,11 +86,12 @@ The initial architecture proposed routing users to multiple independent cloud pr
 - **HuangComplex** (local Nvidia DGX) — open-source models
 
 ### Revised Plan
-To simplify credential management, reduce firewall exposure, and present a unified enterprise contract surface, all cloud-hosted LLMs are consolidated into **Azure AI Foundry**. This covers:
+To simplify credential management, reduce firewall exposure, and present a unified enterprise contract surface, all cloud-hosted LLMs are consolidated into **Azure AI Foundry** during AI week. This covers:
 
 - **Anthropic** — Claude Opus 4.6, Claude Sonnet 4.6, Claude Haiku 4.5
 - **OpenAI** — GPT-5.3 (or current flagship at deployment time)
-- **Google** — TBD (Gemini availability in Azure AI Foundry to be confirmed)
+- **xAI** — Grok 4 (or current flagship at deployment time)
+- **Google** — TBD (At this time we are exploring options fo making Gemini available via https://aistudio.google.com without the overhead of Google Cloud accounts and Google Vertex AI management)
 
 **HuangComplex** (local Nvidia DGX) remains as the on-premises provider for locally-hosted open-source models, demonstrating the hybrid cloud + on-prem capability that is a key goal of the event.
 
@@ -192,8 +211,9 @@ Modify LibreChat's `deploy-compose.yml`:
 
 | Item | Owner | Notes |
 |------|-------|-------|
-| Azure AI Foundry subscription and model deployments | Infrastructure | Anthropic, OpenAI, and Google (TBD) models need to be deployed; API key and base URL required |
-| Google/Gemini availability in Azure AI Foundry | Infrastructure | Confirm whether Gemini is available or if a direct Vertex AI connection is needed |
+| Azure AI Foundry subscription and model deployments | Infrastructure | Anthropic, OpenAI, xAI (Grok), and Google (TBD) models need to be deployed; API key and base URL required |
+| Context window sizes of Azure AI Foundry models | Application team | Confirm whether any Azure-hosted models offer 1M+ token context windows; if not, a direct Google AI Studio endpoint may be required for large-document RAG use cases |
+| Google/Gemini availability | Infrastructure / Application team | Confirm whether Gemini is available via Azure AI Foundry or requires a direct Google AI Studio connection; AI Studio is preferred to avoid Google Cloud account overhead |
 | HuangComplex API endpoint and models | Application team | Confirm vLLM/Ollama URL, port, auth method, and which models are available for the event |
 | Duo SSO OIDC application | Infrastructure | Client ID, secret, issuer URL, and groups claim format required before `.env` can be completed |
 | `ai-week-access` AD group | Infrastructure | Create group; confirm Duo sync and groups claim format in ID token |
