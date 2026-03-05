@@ -4,6 +4,19 @@
 
 This deployment has a dual mandate: serve AI Week as a bounded event, while being architected from the start so that a continuation decision can be made immediately after the event without requiring a rebuild.
 
+### Primary Goal: Single Entry Point to OSU's Hybrid AI Inference Infrastructure
+
+Oregon State University operates under two complementary mandates that together define a hybrid AI strategy: OSU is a **cloud-first organization**, and OSU is **mandated to operate a supercomputer**. These are not competing priorities — they are the two pillars of OSU's AI infrastructure posture.
+
+The primary goal of this deployment is to evaluate LibreChat as a **single unified entry point** that spans both pillars. Users should be able to access the full spectrum of OSU's AI inference capacity — commercial cloud models and on-premises HPC resources — through one interface, without needing to know or care where computation is happening. This matters because:
+
+- Researchers and staff should not need separate accounts, tools, or workflows depending on whether a task is better suited to a cloud LLM or a locally-hosted model
+- IT should not need to operate multiple disconnected AI portals as the model landscape evolves
+- OSU's investment in supercomputing infrastructure (HuangComplex DGX) should be accessible to the same users who access cloud models, on equal footing in the same UI
+- As new models are deployed — whether in Azure AI Foundry, on Bedrock, on Google's infrastructure, or on HPC — they should be addable to a single platform without end-user retraining
+
+AI Week is the first public proof of concept for this strategy. The event demonstrates the hybrid model in front of a broad audience and generates the operational experience needed to evaluate whether this platform can scale to institution-wide use. Everything else in this document — the LLM provider choices, the RAG capabilities, the access model — serves this primary goal.
+
 **During AI Week**
 - The system is reachable under a designated event URL
 - Access is restricted to a defined user base (pre-registrants, session attendees, and exhibit walk-bys — see Section 4)
