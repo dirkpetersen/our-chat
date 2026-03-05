@@ -1,5 +1,25 @@
 # AI Week LibreChat Deployment Plan
 
+## Goals and Deployment Lifecycle
+
+This deployment has a dual mandate: serve AI Week as a bounded event, while being architected from the start so that a continuation decision can be made immediately after the event without requiring a rebuild.
+
+**During AI Week**
+- The system is reachable under a designated event URL
+- Access is restricted to a defined user base (pre-registrants, session attendees, and exhibit walk-bys — see Section 4)
+- The primary goal is demonstration: show that a single interface can access leading commercial LLMs from multiple providers plus a local on-premises model
+
+**After AI Week**
+- The event URL may change if the deployment moves to a permanent production address
+- Access policy is under evaluation: the working assumption is broader general availability, subject to the cost monitoring outcome
+- The decision to continue or discontinue rests on two factors:
+  - **Cost**: overall spend must be within acceptable bounds; cost monitoring infrastructure must be in place before general availability is opened
+  - **Demand and policy**: organizational readiness to support an ongoing service
+
+The deployment should therefore be treated as production-grade from day one — not a throwaway prototype. Configuration, security, and operational practices should be consistent with a system that may run indefinitely.
+
+---
+
 ## 1. Purpose and Scope
 
 This document defines requirements and responsibilities for a temporary [LibreChat](https://github.com/danny-avila/LibreChat) deployment supporting AI Week — a multi-session public-facing event with open exhibit access, live sessions, and pre-registered participants. The deployment must be accessible from attendees' personal cell phones without VPN.
